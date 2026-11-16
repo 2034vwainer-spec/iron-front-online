@@ -770,6 +770,26 @@ function render(){
     if(Math.abs(a)>.66||d<.2)return;
     const sx=450+a/1.25*900;
     if(sx<0||sx>=900||d>depth[Math.floor(sx)]||blocked(player.x,player.y,e.x,e.y))return;
+    if(e.pegasus){
+      const size=Math.min(285,410/d),y=horizon-size*.55;
+      ctx.save();ctx.translate(sx,y+size*.56);
+      const flap=Math.sin(now*.008)*size*.055;
+      ctx.fillStyle='#111923';ctx.beginPath();ctx.ellipse(0,size*.18,size*.34,size*.22,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#d9e6ef';ctx.beginPath();ctx.ellipse(0,-size*.02,size*.36,size*.17,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#b8c9da';
+      ctx.beginPath();ctx.moveTo(-size*.08,-size*.12);ctx.lineTo(-size*.25,-size*(.56+flap/size));ctx.lineTo(-size*.02,-size*.36);ctx.lineTo(size*.08,-size*.13);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(size*.08,-size*.12);ctx.lineTo(size*.25,-size*(.56-flap/size));ctx.lineTo(size*.02,-size*.36);ctx.lineTo(-size*.08,-size*.13);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#d9e6ef';ctx.lineWidth=Math.max(3,size*.055);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-size*.19,size*.10);ctx.lineTo(-size*.23,size*.43);ctx.moveTo(-size*.05,size*.12);ctx.lineTo(-size*.06,size*.44);ctx.moveTo(size*.14,size*.10);ctx.lineTo(size*.17,size*.43);ctx.moveTo(size*.27,size*.08);ctx.lineTo(size*.30,size*.39);ctx.stroke();
+      ctx.fillStyle='#e8f0f6';ctx.beginPath();ctx.ellipse(size*.30,-size*.20,size*.14,size*.11,-.5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(size*.26,-size*.29);ctx.lineTo(size*.29,-size*.53);ctx.lineTo(size*.34,-size*.29);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#ffdf8a';ctx.shadowBlur=18;ctx.shadowColor='#ffcf69';ctx.beginPath();ctx.arc(size*.34,-size*.20,Math.max(2,size*.025),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      ctx.restore();
+      ctx.fillStyle='#fff';ctx.font='bold 12px monospace';ctx.fillText('PEGASUS — FINAL BOSS',sx-73,y-24);
+      ctx.fillStyle='#090d12';ctx.fillRect(sx-size*.38,y-15,size*.76,8);
+      ctx.fillStyle='#e6c66d';ctx.fillRect(sx-size*.37,y-14,size*.74*Math.max(0,e.hp/e.max),6);
+      return;
+    }
     const size=Math.min(245,360/d*(e.boss?1.4:1)),y=horizon-size*.55,bodyW=size*.48;
     ctx.fillStyle='#080d0b88';ctx.beginPath();ctx.ellipse(sx,y+size*.93,bodyW*.72,size*.09,0,0,Math.PI*2);ctx.fill();
     // boots and legs
@@ -831,7 +851,7 @@ function render(){
     // health bar
     ctx.fillStyle='#080d0b';ctx.fillRect(sx-size*.31,y-13,size*.62,7);
     ctx.fillStyle='#ce5146';ctx.fillRect(sx-size*.30,y-12,size*.60*Math.max(0,e.hp/e.max),5);
-    if(e.boss){ctx.fillStyle='#fff';ctx.font='bold 11px monospace';ctx.fillText('BOSS',sx-17,y-20)}
+    if(e.boss&&!e.pegasus){ctx.fillStyle='#fff';ctx.font='bold 11px monospace';ctx.fillText('BOSS',sx-17,y-20)}
     
   });
   // Draw other real players in the 5v5 match.
