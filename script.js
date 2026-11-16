@@ -479,7 +479,7 @@ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.datase
 function waveSize(wave=level){
   if(mode==='DUEL'||mode==='5V5')return 0;
   const base={ATTACK:5,ADVANCE:5,DEFENSE:6,SURVIVAL:8,'BATTLE ROYALE':12}[mode]||5;
-  return Math.min(22,base+Math.floor((wave-1)*1.45));
+  return Math.min(22,base+Math.floor((Math.min(20,wave)-1)*1.45));
 }
 function spawn(n){
   enemies=[];enemyBolts=[];
@@ -498,12 +498,15 @@ function spawn(n){
     if(chosen.length>=n)break;
   }
   chosen.forEach((p,i)=>{
-    const boss=level>1&&level%3===0&&i===0,hpValue=boss?260+level*38:55+level*12;
-    enemies.push({x:p.x,y:p.y,hp:hpValue,max:hpValue,boss,speed:boss?.48:Math.min(1.25,.65+level*.025),hit:0,nextShot:performance.now()+900+Math.random()*1100});
+    const pegasus=level===20&&i===0;
+    const boss=pegasus||(level>1&&level%3===0&&i===0);
+    const hpValue=pegasus?1800:boss?260+level*38:55+level*12;
+    enemies.push({x:p.x,y:p.y,hp:hpValue,max:hpValue,boss,pegasus,speed:pegasus?.38:boss?.48:Math.min(1.25,.65+level*.025),hit:0,nextShot:performance.now()+900+Math.random()*1100});
   });
 }
 function beginNextWave(){
   if(waveBreakUntil||!playing)return;
+  if(mode!=='DUEL'&&mode!=='5V5'&&level>=20){finishGameOver('PEGASUS DEFEATED — CAMPAIGN COMPLETE!');say('CAMPAIGN COMPLETE — ALL 20 WAVES CLEARED!');return}
   waveBreakUntil=performance.now()+4500;
   
   say(mode==='DUEL'?'ROUND '+level+' WON — NEXT OPPONENT INCOMING':'WAVE '+level+' CLEARED — PREPARE FOR THE NEXT WAVE');
