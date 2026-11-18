@@ -576,8 +576,8 @@ function fire(){
   // Manual shot only: the crosshair direction must intersect the enemy's small on-screen hit area.
   enemies.forEach(e=>{
     const d=Math.hypot(e.x-player.x,e.y-player.y),a=Math.atan2(e.y-player.y,e.x-player.x),diff=Math.abs(angleDiff(a,player.a));
-    const hitAngle=Math.atan2(.07,d);
-    if(d<14&&diff<=hitAngle&&diff<best&&!blocked(player.x,player.y,e.x,e.y)){best=diff;target=e}
+    const hitAngle=mode==='BATTLE ROYALE'?.24:Math.atan2(.07,d);
+    if(d<(mode==='BATTLE ROYALE'?18:14)&&diff<=hitAngle&&diff<best&&!blocked(player.x,player.y,e.x,e.y)){best=diff;target=e}
   });
   if(ammo<=0){
     if(now-emptyMessageAt>1200){say('MAGAZINE EMPTY — PRESS R TO RELOAD');emptyMessageAt=now}
@@ -1030,7 +1030,7 @@ function finishGameOver(reason){
   $('gameover').style.display='flex';
   say('GAME OVER');
 }
-function update(dt){let speed=2.8*dt*(keys.shift?1.5:1),f=(keys.w?1:0)-(keys.s?1:0),s=(keys.d?1:0)-(keys.a?1:0);if(!(mode==='BATTLE ROYALE'&&performance.now()<brDropUntil)){if(keys.arrowleft)player.a-=2*dt;if(keys.arrowright)player.a+=2*dt;}let dx=(Math.cos(player.a)*f-Math.sin(player.a)*s)*speed,dy=(Math.sin(player.a)*f+Math.cos(player.a)*s)*speed;if(!(mode==='BATTLE ROYALE'&&performance.now()<brDropUntil)){if(free(player.x+dx,player.y))player.x+=dx;if(free(player.x,player.y+dy))player.y+=dy;}enemies.forEach(e=>{let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);if(d>.75&&!blocked(e.x,e.y,player.x,player.y)){let nx=e.x+dx/d*e.speed*dt,ny=e.y+dy/d*e.speed*dt;if(free(nx,e.y,.14))e.x=nx;if(free(e.x,ny,.14))e.y=ny}if(d<.8&&Math.random()<dt*.7){let damage=Math.max(1,5*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage}if(d<11&&d>.9&&performance.now()>=e.nextShot&&!blocked(e.x,e.y,player.x,player.y)){const a=Math.atan2(player.y-e.y,player.x-e.x);enemyBolts.push({x:e.x,y:e.y,vx:Math.cos(a)*5.2,vy:Math.sin(a)*5.2,life:2.5});e.nextShot=performance.now()+(e.boss?1250:2050)+Math.random()*650}});enemyBolts=enemyBolts.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(wall(b.x,b.y)||b.life<=0)return false;if(Math.hypot(b.x-player.x,b.y-player.y)<.25){const damage=Math.max(2,8*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage;return false}return true});if(mode==='BATTLE ROYALE'){
+function update(dt){let speed=(mode==='BATTLE ROYALE'?3.8:2.8)*dt*(keys.shift?1.5:1),f=(keys.w?1:0)-(keys.s?1:0),s=(keys.d?1:0)-(keys.a?1:0);if(keys.arrowleft)player.a-=2.4*dt;if(keys.arrowright)player.a+=2.4*dt;let dx=(Math.cos(player.a)*f-Math.sin(player.a)*s)*speed,dy=(Math.sin(player.a)*f+Math.cos(player.a)*s)*speed;if(free(player.x+dx,player.y))player.x+=dx;if(free(player.x,player.y+dy))player.y+=dy;enemies.forEach(e=>{let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);if(d>.75&&!blocked(e.x,e.y,player.x,player.y)){let nx=e.x+dx/d*e.speed*dt,ny=e.y+dy/d*e.speed*dt;if(free(nx,e.y,.14))e.x=nx;if(free(e.x,ny,.14))e.y=ny}if(d<.8&&Math.random()<dt*.7){let damage=Math.max(1,5*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage}if(d<11&&d>.9&&performance.now()>=e.nextShot&&!blocked(e.x,e.y,player.x,player.y)){const a=Math.atan2(player.y-e.y,player.x-e.x);enemyBolts.push({x:e.x,y:e.y,vx:Math.cos(a)*5.2,vy:Math.sin(a)*5.2,life:2.5});e.nextShot=performance.now()+(e.boss?1250:2050)+Math.random()*650}});enemyBolts=enemyBolts.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(wall(b.x,b.y)||b.life<=0)return false;if(Math.hypot(b.x-player.x,b.y-player.y)<.25){const damage=Math.max(2,8*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage;return false}return true});if(mode==='BATTLE ROYALE'){
   const elapsed=Math.max(0,(performance.now()-brStartedAt)/1000);
   brZoneRadius=Math.max(3.1,10.8-Math.max(0,elapsed-28)*.052);
   const outside=Math.hypot(player.x-brZoneCenter.x,player.y-brZoneCenter.y)>brZoneRadius;
