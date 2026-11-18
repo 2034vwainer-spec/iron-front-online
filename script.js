@@ -408,7 +408,7 @@ function buildMap(layout){
 let map=buildMap('ATTACK');
 let currentTheme={label:'INDUSTRIAL YARD',sky:['#142533','#506d78','#a9b5a7'],haze:'#c0c3ae66',skyline:'#263c3c',road:[65,72,68],ground:[117,119,105],grass:[69,83,58],roadAxis:'cross'};
 let scenery=[];
-const spawnPoints={'ATTACK':{x:2.5,y:11.5,a:0},'ADVANCE':{x:2.5,y:11.5,a:0},'DEFENSE':{x:12.5,y:11.5,a:0},'SURVIVAL':{x:2.5,y:11.5,a:0},'BATTLE ROYALE':{x:11.5,y:21.5,a:-Math.PI/2}};
+const spawnPoints={'ATTACK':{x:2.5,y:11.5,a:0},'ADVANCE':{x:2.5,y:11.5,a:0},'DEFENSE':{x:12.5,y:11.5,a:0},'SURVIVAL':{x:2.5,y:11.5,a:0},'BATTLE ROYALE':{x:11.5,y:12.5,a:-Math.PI/2}};
 const gun=()=>guns.find(g=>g.name===weapon);
 function show(id){['menu','online','shop','game','bus','gameover'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='gameover'){$('gameover').classList.remove('hidden');$('gameover').scrollIntoView({block:'center',behavior:'instant'})}}
 function say(s){$('message').textContent=s}
@@ -911,6 +911,31 @@ function render(){
   ctx.fillStyle='#465247';ctx.fillRect(-26,-48,56,8);ctx.fillStyle='#202b24';ctx.fillRect(15,-30,30,17);ctx.fillStyle='#0b100e';ctx.fillRect(-5,-18,16,25);
   if(now<muzzleFlashUntil){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(96,-27);ctx.lineTo(137,-45);ctx.lineTo(124,-22);ctx.lineTo(148,-8);ctx.lineTo(105,-12);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0bd';ctx.beginPath();ctx.arc(111,-23,9,0,Math.PI*2);ctx.fill()}
   ctx.restore();
+
+  if(mode==='BATTLE ROYALE'){
+    brLoot.forEach(item=>{
+      const dx=item.x-player.x,dy=item.y-player.y,d=Math.hypot(dx,dy);
+      let a=Math.atan2(dy,dx)-player.a;a=Math.atan2(Math.sin(a),Math.cos(a));
+      if(Math.abs(a)>.66||d<.3)return;
+      const sx=450+a/1.25*900;
+      if(sx<0||sx>=900||d>depth[Math.floor(sx)]||blocked(player.x,player.y,item.x,item.y))return;
+      const sy=horizon+Math.min(205,145/d);
+      ctx.save();ctx.shadowBlur=14;ctx.shadowColor='#f4d56c';
+      ctx.fillStyle=item.type==='med'?'#58d68d':item.type==='armor'?'#69b9e8':item.type==='weapon'?'#f0c75e':'#d8d8a0';
+      ctx.fillRect(sx-6,sy-7,12,14);ctx.strokeStyle='#fff';ctx.strokeRect(sx-6,sy-7,12,14);ctx.restore();
+    });
+    ctx.save();ctx.fillStyle='#101a18';ctx.beginPath();ctx.ellipse(450,516,53,10,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#354b43';ctx.beginPath();ctx.moveTo(405,520);ctx.lineTo(411,456);ctx.quadraticCurveTo(450,425,489,456);ctx.lineTo(495,520);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#b19b7b';ctx.beginPath();ctx.arc(450,449,17,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#25352f';ctx.beginPath();ctx.arc(450,444,18,Math.PI,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#202d28';ctx.fillRect(472,462,38,9);ctx.fillStyle='#a7c7a4';ctx.fillRect(425,477,25,6);ctx.restore();
+    if(performance.now()<brDropUntil){
+      ctx.save();ctx.strokeStyle='#f4f0df';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(450,78);ctx.quadraticCurveTo(355,4,300,90);ctx.quadraticCurveTo(450,150,600,90);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(450,82);ctx.lineTo(450,190);ctx.moveTo(365,67);ctx.lineTo(430,190);ctx.moveTo(535,67);ctx.lineTo(470,190);ctx.stroke();
+      ctx.fillStyle='#fff';ctx.font='bold 16px monospace';ctx.fillText('PARACHUTE — DESCENDING',330,210);ctx.restore();
+    }
+    ctx.fillStyle='#e7f2d5';ctx.font='bold 12px monospace';ctx.fillText('SAFE ZONE',18,24);
+  }
   // Ground grit and small scattered stones in the foreground
   for(let i=0;i<34;i++){
     const x=(i*137+53)%900,y=390+(i*47%125),r=1+(i%3);
@@ -937,6 +962,11 @@ function render(){
     const tile=map[gy][gx];if(tile==='0'){ctx.fillStyle=((gx+gy)%2)?'#596753':'#68745d'}
     else if(tile==='2')ctx.fillStyle='#687d7c';else if(tile==='3')ctx.fillStyle='#8a7658';else ctx.fillStyle='#66735e';
     ctx.fillRect(mx+gx*cell,my+gy*cell,cell+.3,cell+.3);
+  }
+
+  if(mode==='BATTLE ROYALE'){
+    ctx.strokeStyle='#65d9e8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(mx+brZoneCenter.x*cell,my+brZoneCenter.y*cell,brZoneRadius*cell,0,Math.PI*2);ctx.stroke();
+    brLoot.forEach(item=>{ctx.fillStyle='#f0d36e';ctx.fillRect(mx+item.x*cell-2,my+item.y*cell-2,4,4)});
   }
   // Red dots are enemies; bosses use a larger orange marker.
   enemies.forEach(e=>{
