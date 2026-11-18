@@ -965,11 +965,6 @@ function render(){
     ctx.fillStyle='#b19b7b';ctx.beginPath();ctx.arc(450,449,17,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#25352f';ctx.beginPath();ctx.arc(450,444,18,Math.PI,Math.PI*2);ctx.fill();
     ctx.fillStyle='#202d28';ctx.fillRect(472,462,38,9);ctx.fillStyle='#a7c7a4';ctx.fillRect(425,477,25,6);ctx.restore();
-    if(performance.now()<brDropUntil){
-      ctx.save();ctx.strokeStyle='#f4f0df';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(450,78);ctx.quadraticCurveTo(355,4,300,90);ctx.quadraticCurveTo(450,150,600,90);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(450,82);ctx.lineTo(450,190);ctx.moveTo(365,67);ctx.lineTo(430,190);ctx.moveTo(535,67);ctx.lineTo(470,190);ctx.stroke();
-      ctx.fillStyle='#fff';ctx.font='bold 16px monospace';ctx.fillText('PARACHUTE — DESCENDING',330,210);ctx.restore();
-    }
     ctx.fillStyle='#e7f2d5';ctx.font='bold 12px monospace';ctx.fillText('SAFE ZONE',18,24);ctx.fillStyle='#dce9d5';ctx.font='11px monospace';ctx.fillText('LOOT: '+brLoot.length+' DROPS',18,42);ctx.fillStyle='#b9dbe5';ctx.fillText('ZONE RADIUS: '+brZoneRadius.toFixed(1),18,59);
   }
   // Ground grit and small scattered stones in the foreground
