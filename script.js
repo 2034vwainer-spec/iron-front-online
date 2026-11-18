@@ -526,7 +526,25 @@ function advanceWave(now){
 }
 function start(){if(mode==='5V5'){onlineMode='5V5';show('online');onlineStatus('CREATE OR JOIN A ROOM — 10 REAL PLAYERS REQUIRED');return}level=1;waveBreakUntil=0;reloadUntil=0;hp=100;baseHp=100;configureMap();player={...(spawnPoints[mode]||spawnPoints.ATTACK)};ammo=gun().clip;reserve=gun().clip*3;bus=mode==='BATTLE ROYALE';if(bus){show('bus');return}spawn(waveSize(1));launch()}
 function launch(){bus=false;playing=true;paused=false;show('game');$('modeLabel').textContent=(mode==='DUEL'?'1V1 DUEL':mode==='5V5'?'5V5 ONLINE':mode)+' / '+currentTheme.label;last=performance.now();hud();say(mode==='DUEL'?'1V1 DUEL — DEFEAT THE OPPONENT':mode==='5V5'?'5V5 ONLINE — BLUE VS RED':'MISSION LIVE — ELIMINATE HOSTILES');requestAnimationFrame(loop)}
-$('play').onclick=()=>{if(mode==='DUEL'){show('online');onlineStatus('CREATE A ROOM OR JOIN WITH A CODE')}else start()};$('jump').onclick=()=>{level=1;waveBreakUntil=0;spawn(waveSize(1));brStartedAt=performance.now();brDropUntil=brStartedAt+5200;brZoneRadius=10.8;brLastZoneTick=brStartedAt;launch();say('PARACHUTE DROP — LANDING IN 5 SECONDS')};
+function createBattleLoot(){
+  const spots=[];
+  for(let y=1;y<map.length-1;y++)for(let x=1;x<map[y].length-1;x++){
+    const px=x+.5,py=y+.5;
+    if(!wall(px,py)&&Math.hypot(px-player.x,py-player.y)>2.2)spots.push({x:px,y:py});
+  }
+  for(let i=spots.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[spots[i],spots[j]]=[spots[j],spots[i]]}
+  const types=['weapon','armor','med','ammo','ammo','med','weapon','armor','ammo','med','ammo','weapon','armor','med'];
+  brLoot=spots.slice(0,types.length).map((p,i)=>({...p,type:types[i]}));
+}
+$('play').onclick=()=>{if(mode==='DUEL'){show('online');onlineStatus('CREATE A ROOM OR JOIN WITH A CODE')}else start()};
+$('jump').onclick=()=>{
+  level=1;waveBreakUntil=0;
+  brZoneCenter={x:12,y:12};brZoneRadius=10.8;
+  player={...(spawnPoints['BATTLE ROYALE'])};
+  spawn(waveSize(1));createBattleLoot();
+  brStartedAt=performance.now();brDropUntil=brStartedAt+5200;brLastZoneTick=brStartedAt;
+  launch();say('PARACHUTE DROP — LANDING IN 5 SECONDS. LOOT IS SCATTERED AROUND THE TOWN.');
+};
 $('quit').onclick=()=>{playing=false;if(mode==='DUEL'||mode==='5V5'){sendNet({type:'leave'});closeOnline()}show('menu');say('MISSION ENDED')};
 $('retryGame').onclick=()=>{if(mode==='5V5'){closeOnline();onlineMode='5V5';show('online');onlineStatus('CREATE A NEW 5V5 ROOM TO PLAY AGAIN.');return}if(mode==='DUEL'){if(!onlineReady||!peerConn||!peerConn.open){onlineStatus('CONNECTION LOST — CREATE A NEW ROOM TO PLAY AGAIN.');closeOnline();show('online');return}sendNet({type:'rematch'});startOnlineRematch()}else start()};$('gameOverMenu').onclick=()=>{playing=false;paused=false;if(mode==='DUEL'||mode==='5V5'){sendNet({type:'leave'});closeOnline()}show('menu');say('MISSION ENDED — SELECT A NEW OPERATION')};
 $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'RESUME':'PAUSE';if(!paused){last=performance.now();requestAnimationFrame(loop)}};
@@ -905,12 +923,30 @@ function render(){
   // Crosshair
   ctx.strokeStyle='#f4e7c5';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(438,horizon);ctx.lineTo(462,horizon);ctx.moveTo(450,horizon-12);ctx.lineTo(450,horizon+12);ctx.stroke();
-  // Simple first-person weapon silhouette and muzzle flash
-  ctx.save();ctx.translate(450+cameraKick*8,520+Math.sin(footstepPhase)*2);ctx.fillStyle='#111916';
-  ctx.beginPath();ctx.moveTo(-82,0);ctx.lineTo(-58,-45);ctx.lineTo(-25,-56);ctx.lineTo(28,-54);ctx.lineTo(55,-35);ctx.lineTo(91,-29);ctx.lineTo(98,-12);ctx.lineTo(58,-8);ctx.lineTo(43,0);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#465247';ctx.fillRect(-26,-48,56,8);ctx.fillStyle='#202b24';ctx.fillRect(15,-30,30,17);ctx.fillStyle='#0b100e';ctx.fillRect(-5,-18,16,25);
-  if(now<muzzleFlashUntil){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(96,-27);ctx.lineTo(137,-45);ctx.lineTo(124,-22);ctx.lineTo(148,-8);ctx.lineTo(105,-12);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0bd';ctx.beginPath();ctx.arc(111,-23,9,0,Math.PI*2);ctx.fill()}
-  ctx.restore();
+  if(mode==='BATTLE ROYALE'){
+    // Third-person-style player avatar, backpack and held blaster.
+    const bob=Math.sin(footstepPhase)*3;
+    ctx.save();ctx.translate(450+cameraKick*5,520+bob);
+    ctx.fillStyle='#0a100e88';ctx.beginPath();ctx.ellipse(0,-5,61,12,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#202c29';ctx.fillRect(-31,-93,20,75);ctx.fillRect(11,-93,20,75);
+    ctx.fillStyle='#52644f';ctx.fillRect(-35,-101,27,57);ctx.fillRect(8,-101,27,57);
+    ctx.fillStyle='#263b35';ctx.fillRect(-39,-164,78,75);
+    ctx.fillStyle='#536b5c';ctx.fillRect(-34,-160,68,58);
+    ctx.fillStyle='#182820';ctx.fillRect(-47,-155,15,55);ctx.fillRect(32,-155,15,55);
+    ctx.fillStyle='#b49b7d';ctx.beginPath();ctx.arc(0,-181,20,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#202c29';ctx.beginPath();ctx.arc(0,-188,21,Math.PI,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#17231e';ctx.fillRect(-23,-147,46,7);
+    ctx.fillStyle='#273b32';ctx.fillRect(21,-145,46,10);ctx.fillStyle='#89917b';ctx.fillRect(54,-149,37,5);
+    if(now<muzzleFlashUntil){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(88,-151);ctx.lineTo(125,-169);ctx.lineTo(113,-146);ctx.lineTo(134,-132);ctx.lineTo(95,-137);ctx.closePath();ctx.fill()}
+    ctx.restore();
+  }else{
+    // First-person weapon silhouette for the other game modes.
+    ctx.save();ctx.translate(450+cameraKick*8,520+Math.sin(footstepPhase)*2);ctx.fillStyle='#111916';
+    ctx.beginPath();ctx.moveTo(-82,0);ctx.lineTo(-58,-45);ctx.lineTo(-25,-56);ctx.lineTo(28,-54);ctx.lineTo(55,-35);ctx.lineTo(91,-29);ctx.lineTo(98,-12);ctx.lineTo(58,-8);ctx.lineTo(43,0);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#465247';ctx.fillRect(-26,-48,56,8);ctx.fillStyle='#202b24';ctx.fillRect(15,-30,30,17);ctx.fillStyle='#0b100e';ctx.fillRect(-5,-18,16,25);
+    if(now<muzzleFlashUntil){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(96,-27);ctx.lineTo(137,-45);ctx.lineTo(124,-22);ctx.lineTo(148,-8);ctx.lineTo(105,-12);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0bd';ctx.beginPath();ctx.arc(111,-23,9,0,Math.PI*2);ctx.fill()}
+    ctx.restore();
+  }
 
   if(mode==='BATTLE ROYALE'){
     brLoot.forEach(item=>{
@@ -934,7 +970,7 @@ function render(){
       ctx.beginPath();ctx.moveTo(450,82);ctx.lineTo(450,190);ctx.moveTo(365,67);ctx.lineTo(430,190);ctx.moveTo(535,67);ctx.lineTo(470,190);ctx.stroke();
       ctx.fillStyle='#fff';ctx.font='bold 16px monospace';ctx.fillText('PARACHUTE — DESCENDING',330,210);ctx.restore();
     }
-    ctx.fillStyle='#e7f2d5';ctx.font='bold 12px monospace';ctx.fillText('SAFE ZONE',18,24);
+    ctx.fillStyle='#e7f2d5';ctx.font='bold 12px monospace';ctx.fillText('SAFE ZONE',18,24);ctx.fillStyle='#dce9d5';ctx.font='11px monospace';ctx.fillText('LOOT: '+brLoot.length+' DROPS',18,42);ctx.fillStyle='#b9dbe5';ctx.fillText('ZONE RADIUS: '+brZoneRadius.toFixed(1),18,59);
   }
   // Ground grit and small scattered stones in the foreground
   for(let i=0;i<34;i++){
