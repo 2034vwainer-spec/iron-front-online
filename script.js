@@ -960,11 +960,6 @@ function render(){
       ctx.fillStyle=item.type==='med'?'#58d68d':item.type==='armor'?'#69b9e8':item.type==='weapon'?'#f0c75e':'#d8d8a0';
       ctx.fillRect(sx-6,sy-7,12,14);ctx.strokeStyle='#fff';ctx.strokeRect(sx-6,sy-7,12,14);ctx.restore();
     });
-    ctx.save();ctx.fillStyle='#101a18';ctx.beginPath();ctx.ellipse(450,516,53,10,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#354b43';ctx.beginPath();ctx.moveTo(405,520);ctx.lineTo(411,456);ctx.quadraticCurveTo(450,425,489,456);ctx.lineTo(495,520);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#b19b7b';ctx.beginPath();ctx.arc(450,449,17,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#25352f';ctx.beginPath();ctx.arc(450,444,18,Math.PI,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#202d28';ctx.fillRect(472,462,38,9);ctx.fillStyle='#a7c7a4';ctx.fillRect(425,477,25,6);ctx.restore();
     ctx.fillStyle='#e7f2d5';ctx.font='bold 12px monospace';ctx.fillText('SAFE ZONE',18,24);ctx.fillStyle='#dce9d5';ctx.font='11px monospace';ctx.fillText('LOOT: '+brLoot.length+' DROPS',18,42);ctx.fillStyle='#b9dbe5';ctx.fillText('ZONE RADIUS: '+brZoneRadius.toFixed(1),18,59);
   }
   // Ground grit and small scattered stones in the foreground
