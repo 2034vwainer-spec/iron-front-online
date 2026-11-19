@@ -561,7 +561,7 @@ function finishReload(now){
 }
 $('reload').onclick=reload;
 
-window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='r')reload();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='r')reload();if(e.key.toLowerCase()==='1'&&mode==='BATTLE ROYALE'){knifeSelected=true;say('KNIFE TOOL SELECTED — PRESS E NEAR A SUPPLY DROP')}if(e.key.toLowerCase()==='e')useKnifeTool();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 let lastMouseX=null;canvas.addEventListener('pointermove',e=>{let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*LOGICAL_WIDTH/r.width;if(lastMouseX!==null)player.a+=(x-lastMouseX)/LOGICAL_WIDTH*2.1;lastMouseX=x});canvas.addEventListener('pointerleave',()=>lastMouseX=null);
 canvas.addEventListener('pointerdown',e=>{if(e.button===0||e.button===2){e.preventDefault();canvas.setPointerCapture(e.pointerId);mouseHeld=true;fire()}});
 window.addEventListener('pointerup',()=>mouseHeld=false);
@@ -1017,7 +1017,7 @@ function render(){
     ctx.fillStyle='#9b754b';ctx.fillRect(-4,4,8,15);
     ctx.fillStyle='#d7bd8c';ctx.fillRect(-5,4,10,3);
     ctx.restore();
-    ctx.fillStyle='#e7f2d5';ctx.font='9px monospace';ctx.fillText('KNIFE',ix+8,iy+53);
+    ctx.fillStyle=knifeSelected?'#ffe49a':'#e7f2d5';ctx.font='9px monospace';ctx.fillText(knifeSelected?'SELECTED':'KNIFE',ix+4,iy+53);ctx.fillStyle='#fff';ctx.font='9px monospace';ctx.fillText('1 / E',ix+15,iy+44);
     ctx.restore();
   }
   // Minimap legend
@@ -1039,6 +1039,20 @@ function finishGameOver(reason){
   show('gameover');
   $('gameover').style.display='flex';
   say('GAME OVER');
+}
+let knifeSelected=false;
+function useKnifeTool(){
+  if(!playing||paused||mode!=='BATTLE ROYALE')return;
+  knifeSelected=true;
+  let nearest=-1,best=2.1;
+  brLoot.forEach((item,i)=>{const d=Math.hypot(player.x-item.x,player.y-item.y);if(d<best){best=d;nearest=i}});
+  if(nearest<0){say('KNIFE SELECTED — MOVE CLOSER TO A SUPPLY DROP AND PRESS E');return}
+  const item=brLoot[nearest];
+  if(item.type==='weapon'){if(!owned.includes('AK-47')){owned.push('AK-47');weapon='AK-47';ammo=gun().clip;say('SUPPLY OPENED: AK-47 EQUIPPED')}else{reserve+=45;say('SUPPLY OPENED: +45 AMMO')}}
+  else if(item.type==='armor'){armor=Math.max(armor,30);say('SUPPLY OPENED: REINFORCED ARMOR')}
+  else if(item.type==='med'){hp=Math.min(100,hp+35);say('SUPPLY OPENED: +35 HP')}
+  else{reserve+=35;say('SUPPLY OPENED: +35 AMMO')}
+  brLoot.splice(nearest,1);knifeSelected=false;
 }
 function update(dt){let speed=(mode==='BATTLE ROYALE'?3.8:2.8)*dt*(keys.shift?1.5:1),f=(keys.w?1:0)-(keys.s?1:0),s=(keys.d?1:0)-(keys.a?1:0);if(keys.arrowleft)player.a-=2.4*dt;if(keys.arrowright)player.a+=2.4*dt;let dx=(Math.cos(player.a)*f-Math.sin(player.a)*s)*speed,dy=(Math.sin(player.a)*f+Math.cos(player.a)*s)*speed;if(free(player.x+dx,player.y))player.x+=dx;if(free(player.x,player.y+dy))player.y+=dy;enemies.forEach(e=>{let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);if(d>.75&&!blocked(e.x,e.y,player.x,player.y)){let nx=e.x+dx/d*e.speed*dt,ny=e.y+dy/d*e.speed*dt;if(free(nx,e.y,.14))e.x=nx;if(free(e.x,ny,.14))e.y=ny}if(d<.8&&Math.random()<dt*.7){let damage=Math.max(1,5*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage}if(d<11&&d>.9&&performance.now()>=e.nextShot&&!blocked(e.x,e.y,player.x,player.y)){const a=Math.atan2(player.y-e.y,player.x-e.x);enemyBolts.push({x:e.x,y:e.y,vx:Math.cos(a)*5.2,vy:Math.sin(a)*5.2,life:2.5});e.nextShot=performance.now()+(e.boss?1250:2050)+Math.random()*650}});enemyBolts=enemyBolts.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(wall(b.x,b.y)||b.life<=0)return false;if(Math.hypot(b.x-player.x,b.y-player.y)<.25){const damage=Math.max(2,8*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage;return false}return true});if(mode==='BATTLE ROYALE'){
   const elapsed=Math.max(0,(performance.now()-brStartedAt)/1000);
