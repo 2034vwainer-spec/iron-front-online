@@ -1005,6 +1005,21 @@ function render(){
   const px=mx+player.x*cell,py=my+player.y*cell;
   ctx.strokeStyle='#f0d57c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+Math.cos(player.a)*10,py+Math.sin(player.a)*10);ctx.stroke();
   ctx.fillStyle='#ffe49a';ctx.beginPath();ctx.arc(px,py,3.5,0,Math.PI*2);ctx.fill();
+  // Inventory slot: decorative fictional utility knife icon (no attack mechanic).
+  if(mode==='BATTLE ROYALE'){
+    ctx.save();
+    const ix=24,iy=438;
+    ctx.fillStyle='#101a18dd';ctx.fillRect(ix,iy,54,58);
+    ctx.strokeStyle='#d6c69a';ctx.lineWidth=2;ctx.strokeRect(ix,iy,54,58);
+    ctx.fillStyle='#e7f2d5';ctx.font='bold 10px monospace';ctx.fillText('1',ix+5,iy+12);
+    ctx.save();ctx.translate(ix+27,iy+34);ctx.rotate(-.55);
+    ctx.fillStyle='#c8d2d0';ctx.beginPath();ctx.moveTo(-2,-19);ctx.lineTo(5,-17);ctx.lineTo(3,5);ctx.lineTo(-3,5);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#9b754b';ctx.fillRect(-4,4,8,15);
+    ctx.fillStyle='#d7bd8c';ctx.fillRect(-5,4,10,3);
+    ctx.restore();
+    ctx.fillStyle='#e7f2d5';ctx.font='9px monospace';ctx.fillText('KNIFE',ix+8,iy+53);
+    ctx.restore();
+  }
   // Minimap legend
   ctx.font='10px monospace';ctx.fillStyle='#ffe49a';ctx.fillText('YOU',mx,my+mm+17);
   ctx.fillStyle='#ff625d';ctx.fillText('ENEMIES',mx+35,my+mm+17);
