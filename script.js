@@ -937,11 +937,13 @@ function render(){
     ctx.fillStyle='#202c29';ctx.beginPath();ctx.arc(0,-188,21,Math.PI,Math.PI*2);ctx.fill();
     ctx.fillStyle='#17231e';ctx.fillRect(-23,-147,46,7);
     if(knifeSelected){
-      // Keep the existing arm/hand silhouette; only swap the held item to a knife.
-      ctx.save();ctx.translate(57,-147);ctx.rotate(-.22);
-      ctx.fillStyle='#303a35';ctx.fillRect(-3,-3,17,8);
-      ctx.fillStyle='#c5c9bd';ctx.beginPath();ctx.moveTo(12,-2);ctx.lineTo(49,-9);ctx.lineTo(39,4);ctx.lineTo(12,5);ctx.closePath();ctx.fill();
-      ctx.strokeStyle='#eef0df';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(15,-1);ctx.lineTo(43,-6);ctx.stroke();ctx.restore();
+      // Clearly visible utility knife in the existing hand; arm/hand shape stays unchanged.
+      ctx.save();ctx.translate(48,-151);ctx.rotate(-.18);
+      ctx.fillStyle='#4b3928';ctx.fillRect(0,-4,27,11);
+      ctx.fillStyle='#b99a70';ctx.fillRect(4,-5,3,13);ctx.fillRect(21,-5,3,13);
+      ctx.fillStyle='#cbd4d1';ctx.beginPath();ctx.moveTo(25,-5);ctx.lineTo(70,-14);ctx.lineTo(59,1);ctx.lineTo(25,7);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#f5f7e9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(29,-3);ctx.lineTo(64,-11);ctx.stroke();
+      ctx.strokeStyle='#6c7770';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(30,4);ctx.lineTo(59,1);ctx.stroke();ctx.restore();
     }else{
       ctx.fillStyle='#273b32';ctx.fillRect(21,-145,46,10);ctx.fillStyle='#89917b';ctx.fillRect(54,-149,37,5);
     }
@@ -1051,9 +1053,9 @@ function finishGameOver(reason){
 let knifeSelected=false;
 function useKnifeTool(){
   if(!playing||paused||mode!=='BATTLE ROYALE'||!knifeSelected)return;
-  let nearest=-1,best=2.1;
+  let nearest=-1,best=3.5;
   brLoot.forEach((item,i)=>{const d=Math.hypot(player.x-item.x,player.y-item.y);if(d<best){best=d;nearest=i}});
-  if(nearest<0){say('KNIFE SELECTED — MOVE CLOSER TO A SUPPLY DROP AND PRESS E');return}
+  if(nearest<0){say('KNIFE EQUIPPED — NO SUPPLY CLOSE BY. FIND A DROP AND PRESS E');return}
   const item=brLoot[nearest];
   if(item.type==='weapon'){if(!owned.includes('AK-47')){owned.push('AK-47');weapon='AK-47';ammo=gun().clip;say('SUPPLY OPENED: AK-47 EQUIPPED')}else{reserve+=45;say('SUPPLY OPENED: +45 AMMO')}}
   else if(item.type==='armor'){armor=Math.max(armor,30);say('SUPPLY OPENED: REINFORCED ARMOR')}
