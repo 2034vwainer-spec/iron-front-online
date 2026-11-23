@@ -563,7 +563,7 @@ $('reload').onclick=reload;
 
 window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='r')reload();if(e.key.toLowerCase()==='1'&&mode==='BATTLE ROYALE'){knifeSelected=true;say('KNIFE EQUIPPED — PRESS E NEAR A SUPPLY DROP')}if(e.key.toLowerCase()==='2'&&mode==='BATTLE ROYALE'){knifeSelected=false;say('WEAPON EQUIPPED')}if(e.key.toLowerCase()==='e')useKnifeTool();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 let lastMouseX=null;canvas.addEventListener('pointermove',e=>{let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*LOGICAL_WIDTH/r.width;if(lastMouseX!==null)player.a+=(x-lastMouseX)/LOGICAL_WIDTH*2.1;lastMouseX=x});canvas.addEventListener('pointerleave',()=>lastMouseX=null);
-canvas.addEventListener('pointerdown',e=>{if(e.button===0||e.button===2){e.preventDefault();canvas.setPointerCapture(e.pointerId);mouseHeld=true;fire()}});
+canvas.addEventListener('pointerdown',e=>{const rect=canvas.getBoundingClientRect(),sx=LOGICAL_WIDTH/rect.width,sy=LOGICAL_HEIGHT/rect.height,cx=(e.clientX-rect.left)*sx,cy=(e.clientY-rect.top)*sy;if(mode==='BATTLE ROYALE'&&cx>=24&&cx<=78&&cy>=438&&cy<=496){e.preventDefault();knifeSelected=true;mouseHeld=false;say('KNIFE EQUIPPED');return}if(e.button===0||e.button===2){e.preventDefault();canvas.setPointerCapture(e.pointerId);mouseHeld=true;fire()}});
 window.addEventListener('pointerup',()=>mouseHeld=false);
 window.addEventListener('pointercancel',()=>mouseHeld=false);
 window.addEventListener('blur',()=>mouseHeld=false);
