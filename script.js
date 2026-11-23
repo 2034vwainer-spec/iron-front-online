@@ -561,7 +561,7 @@ function finishReload(now){
 }
 $('reload').onclick=reload;
 
-window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='r')reload();if(e.key.toLowerCase()==='1'&&mode==='BATTLE ROYALE'){knifeSelected=true;say('KNIFE TOOL SELECTED — PRESS E NEAR A SUPPLY DROP')}if(e.key.toLowerCase()==='e')useKnifeTool();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='r')reload();if(e.key.toLowerCase()==='1'&&mode==='BATTLE ROYALE'){knifeSelected=true;say('KNIFE EQUIPPED — PRESS E NEAR A SUPPLY DROP')}if(e.key.toLowerCase()==='2'&&mode==='BATTLE ROYALE'){knifeSelected=false;say('WEAPON EQUIPPED')}if(e.key.toLowerCase()==='e')useKnifeTool();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 let lastMouseX=null;canvas.addEventListener('pointermove',e=>{let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*LOGICAL_WIDTH/r.width;if(lastMouseX!==null)player.a+=(x-lastMouseX)/LOGICAL_WIDTH*2.1;lastMouseX=x});canvas.addEventListener('pointerleave',()=>lastMouseX=null);
 canvas.addEventListener('pointerdown',e=>{if(e.button===0||e.button===2){e.preventDefault();canvas.setPointerCapture(e.pointerId);mouseHeld=true;fire()}});
 window.addEventListener('pointerup',()=>mouseHeld=false);
@@ -571,7 +571,7 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 function angleDiff(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
 function fire(){
   const now=performance.now();
-  if(!playing||paused||reloadUntil>now||now-lastShot<gun().rate)return;
+  if(!playing||paused||knifeSelected||reloadUntil>now||now-lastShot<gun().rate)return;
   let target=null,best=Infinity;
   // Manual shot only: the crosshair direction must intersect the enemy's small on-screen hit area.
   enemies.forEach(e=>{
@@ -936,8 +936,16 @@ function render(){
     ctx.fillStyle='#b49b7d';ctx.beginPath();ctx.arc(0,-181,20,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#202c29';ctx.beginPath();ctx.arc(0,-188,21,Math.PI,Math.PI*2);ctx.fill();
     ctx.fillStyle='#17231e';ctx.fillRect(-23,-147,46,7);
-    ctx.fillStyle='#273b32';ctx.fillRect(21,-145,46,10);ctx.fillStyle='#89917b';ctx.fillRect(54,-149,37,5);
-    if(now<muzzleFlashUntil){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(88,-151);ctx.lineTo(125,-169);ctx.lineTo(113,-146);ctx.lineTo(134,-132);ctx.lineTo(95,-137);ctx.closePath();ctx.fill()}
+    if(knifeSelected){
+      // Keep the existing arm/hand silhouette; only swap the held item to a knife.
+      ctx.save();ctx.translate(57,-147);ctx.rotate(-.22);
+      ctx.fillStyle='#303a35';ctx.fillRect(-3,-3,17,8);
+      ctx.fillStyle='#c5c9bd';ctx.beginPath();ctx.moveTo(12,-2);ctx.lineTo(49,-9);ctx.lineTo(39,4);ctx.lineTo(12,5);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#eef0df';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(15,-1);ctx.lineTo(43,-6);ctx.stroke();ctx.restore();
+    }else{
+      ctx.fillStyle='#273b32';ctx.fillRect(21,-145,46,10);ctx.fillStyle='#89917b';ctx.fillRect(54,-149,37,5);
+    }
+    if(now<muzzleFlashUntil&&!knifeSelected){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(88,-151);ctx.lineTo(125,-169);ctx.lineTo(113,-146);ctx.lineTo(134,-132);ctx.lineTo(95,-137);ctx.closePath();ctx.fill()}
     ctx.restore();
   }else{
     // First-person weapon silhouette for the other game modes.
@@ -1042,8 +1050,7 @@ function finishGameOver(reason){
 }
 let knifeSelected=false;
 function useKnifeTool(){
-  if(!playing||paused||mode!=='BATTLE ROYALE')return;
-  knifeSelected=true;
+  if(!playing||paused||mode!=='BATTLE ROYALE'||!knifeSelected)return;
   let nearest=-1,best=2.1;
   brLoot.forEach((item,i)=>{const d=Math.hypot(player.x-item.x,player.y-item.y);if(d<best){best=d;nearest=i}});
   if(nearest<0){say('KNIFE SELECTED — MOVE CLOSER TO A SUPPLY DROP AND PRESS E');return}
@@ -1052,15 +1059,15 @@ function useKnifeTool(){
   else if(item.type==='armor'){armor=Math.max(armor,30);say('SUPPLY OPENED: REINFORCED ARMOR')}
   else if(item.type==='med'){hp=Math.min(100,hp+35);say('SUPPLY OPENED: +35 HP')}
   else{reserve+=35;say('SUPPLY OPENED: +35 AMMO')}
-  brLoot.splice(nearest,1);knifeSelected=false;
+  brLoot.splice(nearest,1);
 }
 function update(dt){let speed=(mode==='BATTLE ROYALE'?3.8:2.8)*dt*(keys.shift?1.5:1),f=(keys.w?1:0)-(keys.s?1:0),s=(keys.d?1:0)-(keys.a?1:0);if(keys.arrowleft)player.a-=2.4*dt;if(keys.arrowright)player.a+=2.4*dt;let dx=(Math.cos(player.a)*f-Math.sin(player.a)*s)*speed,dy=(Math.sin(player.a)*f+Math.cos(player.a)*s)*speed;if(free(player.x+dx,player.y))player.x+=dx;if(free(player.x,player.y+dy))player.y+=dy;enemies.forEach(e=>{let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);if(d>.75&&!blocked(e.x,e.y,player.x,player.y)){let nx=e.x+dx/d*e.speed*dt,ny=e.y+dy/d*e.speed*dt;if(free(nx,e.y,.14))e.x=nx;if(free(e.x,ny,.14))e.y=ny}if(d<.8&&Math.random()<dt*.7){let damage=Math.max(1,5*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage}if(d<11&&d>.9&&performance.now()>=e.nextShot&&!blocked(e.x,e.y,player.x,player.y)){const a=Math.atan2(player.y-e.y,player.x-e.x);enemyBolts.push({x:e.x,y:e.y,vx:Math.cos(a)*5.2,vy:Math.sin(a)*5.2,life:2.5});e.nextShot=performance.now()+(e.boss?1250:2050)+Math.random()*650}});enemyBolts=enemyBolts.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(wall(b.x,b.y)||b.life<=0)return false;if(Math.hypot(b.x-player.x,b.y-player.y)<.25){const damage=Math.max(2,8*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage;return false}return true});if(mode==='BATTLE ROYALE'){
   const elapsed=Math.max(0,(performance.now()-brStartedAt)/1000);
   brZoneRadius=Math.max(3.1,10.8-Math.max(0,elapsed-8)*.12);
   const outside=Math.hypot(player.x-brZoneCenter.x,player.y-brZoneCenter.y)>brZoneRadius;
   if(outside&&performance.now()-brLastZoneTick>=1000){hp=Math.max(0,hp-8);brLastZoneTick=performance.now();say('ZONE DAMAGE! YOU ARE OUTSIDE — RETURN TO THE SAFE CIRCLE!');}
-  for(let i=brLoot.length-1;i>=0;i--){const item=brLoot[i];if(Math.hypot(player.x-item.x,player.y-item.y)<.72){if(item.type==='weapon'){if(!owned.includes('AK-47')){owned.push('AK-47');weapon='AK-47';ammo=gun().clip;say('LOOT: AK-47 EQUIPPED')}else{reserve+=45;say('LOOT: +45 AMMO')}}else if(item.type==='armor'){armor=Math.max(armor,30);say('LOOT: REINFORCED ARMOR')}else if(item.type==='med'){hp=Math.min(100,hp+35);say('LOOT: MED KIT +35 HP')}else{reserve+=35;say('LOOT: +35 AMMO')}brLoot.splice(i,1);}
-  }
+  const nearDrop=brLoot.some(item=>Math.hypot(player.x-item.x,player.y-item.y)<2.1);
+  if(nearDrop&&knifeSelected)say('SUPPLY NEARBY — PRESS E TO COLLECT');
   if(performance.now()>brDropUntil&&brDropUntil&&performance.now()-brDropUntil<80)say('LANDED — FIND LOOT AND STAY INSIDE THE SAFE ZONE');
 }
 if(f||s)footstepPhase+=dt*12;cameraKick=Math.max(0,cameraKick-dt*2.8);if(hp<=0||baseHp<=0){finishGameOver(hp<=0?'PLAYER DOWN':'BASE DESTROYED')}}
