@@ -571,7 +571,19 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 function angleDiff(a,b){return Math.atan2(Math.sin(a-b),Math.cos(a-b))}
 function fire(){
   const now=performance.now();
-  if(!playing||paused||knifeSelected||reloadUntil>now||now-lastShot<gun().rate)return;
+  if(!playing||paused)return;
+  if(knifeSelected){
+    if(mode!=='BATTLE ROYALE'||now-knifeLastHit<550)return;
+    knifeLastHit=now;
+    let target=null,best=1.55;
+    enemies.forEach(e=>{const d=Math.hypot(e.x-player.x,e.y-player.y);if(d<best&&!blocked(player.x,player.y,e.x,e.y)){best=d;target=e}});
+    if(target){
+      target.hp-=40;shotFx={until:now+100,target:{x:target.x,y:target.y}};say('KNIFE HIT — 40 DAMAGE');
+      if(target.hp<=0){coins+=target.boss?500:100;enemies=enemies.filter(e=>e!==target);say(target.boss?'BOSS DEFEATED +500 CREDITS':'ENEMY DEFEATED +100 CREDITS');if(!enemies.length){hp=Math.min(100,hp+15);beginNextWave()}}
+    }else say('TOO FAR — MOVE CLOSER');
+    hud();return;
+  }
+  if(reloadUntil>now||now-lastShot<gun().rate)return;
   let target=null,best=Infinity;
   // Manual shot only: the crosshair direction must intersect the enemy's small on-screen hit area.
   enemies.forEach(e=>{
@@ -1050,7 +1062,7 @@ function finishGameOver(reason){
   $('gameover').style.display='flex';
   say('GAME OVER');
 }
-let knifeSelected=false;
+let knifeSelected=false,knifeLastHit=0;
 function useKnifeTool(){
   if(!playing||paused||mode!=='BATTLE ROYALE'||!knifeSelected)return;
   let nearest=-1,best=3.5;
