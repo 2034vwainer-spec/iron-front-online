@@ -217,7 +217,7 @@ function setupConnection(conn,role){
       if(!remotePlayer)remotePlayer={x:data.x,y:data.y,a:data.a,hp:data.hp};
       else{remotePlayer.x=data.x;remotePlayer.y=data.y;remotePlayer.a=data.a;remotePlayer.hp=data.hp}
     }else if(data.type==='hit'){
-      hp=Math.max(0,hp-(Number(data.damage)||0));hud();
+      hp=Math.max(0,hp-(Number(data.damage)||0)*playerDamageMultiplier());hud();
       if(hp<=0){sendNet({type:'won'});finishGameOver('DEFEATED IN ONLINE DUEL')}
     }else if(data.type==='rematch'){
       if(!playing)startOnlineRematch();
@@ -336,10 +336,13 @@ $('joinRoom').onclick=joinOnlineRoom;
 $('loadTurn').onclick=loadTurnRelay;
 $('copyRoomCode').onclick=()=>{if(!roomCodeValue)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(roomCodeValue).then(()=>onlineStatus('ROOM CODE COPIED — SEND IT TO YOUR FRIEND.')).catch(()=>onlineStatus('SELECT THE CODE AND COPY IT MANUALLY.'))}else onlineStatus('SELECT THE CODE AND COPY IT MANUALLY.')};
 
-const guns=[{name:'PISTOL',cost:0,damage:25,clip:12,rate:330},{name:'AK-47',cost:650,damage:22,clip:30,rate:125},{name:'DESERT EAGLE',cost:900,damage:60,clip:7,rate:470},{name:'MACHINE GUN',cost:1600,damage:18,clip:100,rate:45}];
+const guns=[{name:'PISTOL',cost:0,damage:25,clip:12,rate:330},{name:'AK-47',cost:650,damage:22,clip:30,rate:125},{name:'DESERT EAGLE',cost:900,damage:60,clip:7,rate:470},{name:'MACHINE GUN',cost:1600,damage:18,clip:100,rate:45},{name:'PULSE RIFLE',cost:99999999,damage:32,clip:42,rate:170},{name:'NOVA BLASTER',cost:99999999,damage:17,clip:72,rate:68},{name:'ION CANNON',cost:99999999,damage:52,clip:10,rate:420},{name:'ARC CASTER',cost:99999999,damage:39,clip:24,rate:240}];
 const vests=[{name:'LIGHT VEST',cost:300,protection:15},{name:'REINFORCED VEST',cost:700,protection:30},{name:'HEAVY ARMOR',cost:1200,protection:50}];
 let owned=['PISTOL'];
 let storeOwned=[];
+let ownedPowers=[];
+let equippedPower='NONE';
+let powerCooldownUntil=0;
 let equippedSkin={weapon:'DEFAULT',armor:'DEFAULT'};
 let equippedStoreTheme='DEFAULT';
 const storeThemePresets={
@@ -369,6 +372,8 @@ function loadProgress(){
     if(Number.isFinite(data.coins))coins=Math.max(0,data.coins);
     if(Array.isArray(data.owned))owned=[...new Set(['PISTOL',...data.owned])];
     if(Array.isArray(data.storeOwned))storeOwned=[...new Set(data.storeOwned)];
+    if(Array.isArray(data.ownedPowers))ownedPowers=[...new Set(data.ownedPowers)];
+    if(typeof data.equippedPower==='string'&&['AEGIS','OVERDRIVE','RAPID','MEDIC'].includes(data.equippedPower))equippedPower=data.equippedPower;
     if(data.equippedSkin&&typeof data.equippedSkin==='object')equippedSkin={...equippedSkin,...data.equippedSkin};
     if(typeof data.equippedStoreTheme==='string'&&storeThemePresets[data.equippedStoreTheme])equippedStoreTheme=data.equippedStoreTheme;
     if(Number.isFinite(data.armor))armor=data.armor;
@@ -376,7 +381,7 @@ function loadProgress(){
   }catch(e){}
 }
 function saveProgress(){
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify({coins,owned,storeOwned,equippedSkin,equippedStoreTheme,armor,weapon}))}catch(e){}
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify({coins,owned,storeOwned,ownedPowers,equippedPower,equippedSkin,equippedStoreTheme,armor,weapon}))}catch(e){}
 }
 loadProgress();
 applyStoreTheme();
@@ -451,6 +456,23 @@ let currentTheme={label:'INDUSTRIAL YARD',sky:['#142533','#506d78','#a9b5a7'],ha
 let scenery=[];
 const spawnPoints={'ATTACK':{x:2.5,y:11.5,a:0},'ADVANCE':{x:2.5,y:11.5,a:0},'DEFENSE':{x:12.5,y:11.5,a:0},'SURVIVAL':{x:2.5,y:11.5,a:0},'BATTLE ROYALE':{x:11.5,y:12.5,a:-Math.PI/2}};
 const gun=()=>guns.find(g=>g.name===weapon);
+function playerDamageMultiplier(){
+  const reduction=Math.min(90,Math.max(0,armor)+(equippedPower==='AEGIS'?25:0));
+  return Math.max(.1,1-reduction/100);
+}
+function activateEquippedPower(){
+  if(!playing||paused){say('START A MATCH TO USE YOUR POWER');return}
+  if(equippedPower==='MEDIC'){
+    const now=performance.now();
+    if(now<powerCooldownUntil){say('MEDIC PULSE RECHARGING');return}
+    if(hp>=100){say('HEALTH IS ALREADY FULL');return}
+    hp=Math.min(100,hp+35);powerCooldownUntil=now+30000;hud();
+    say('MEDIC PULSE — +35 HEALTH');
+  }else if(equippedPower==='AEGIS')say('AEGIS FIELD ACTIVE — DAMAGE REDUCED');
+  else if(equippedPower==='OVERDRIVE')say('OVERDRIVE ACTIVE — MOVEMENT BOOSTED');
+  else if(equippedPower==='RAPID')say('RAPID CHARGE ACTIVE — HOLD FIRE TO REPEAT');
+  else say('NO POWER EQUIPPED');
+}
 function show(id){['menu','online','shop','game','bus','gameover'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='gameover'){$('gameover').classList.remove('hidden');$('gameover').scrollIntoView({block:'center',behavior:'instant'})}}
 function say(s){$('message').textContent=s}
 function hud(){
@@ -519,46 +541,88 @@ function openShop(type){$('shopTitle').textContent=type==='WEAPON'?'WEAPON ARMOR
 $('weapons').onclick=()=>openShop('WEAPON');$('armor').onclick=()=>openShop('ARMOR');$('back').onclick=()=>show('menu');
 function openRealStore(){
   const products=[
-    {name:'Menu Theme · Neon Grid',desc:'Blue neon colors for the whole game interface.',price:'R$ 7,90',key:'NEON'},
-    {name:'Menu Theme · Ember',desc:'Warm orange and charcoal interface palette.',price:'R$ 8,90',key:'EMBER'},
-    {name:'Menu Theme · Forest',desc:'Green forest-inspired interface palette.',price:'R$ 8,90',key:'FOREST'},
-    {name:'Menu Theme · Royal Violet',desc:'Violet and lavender interface palette.',price:'R$ 9,90',key:'ROYAL'},
-    {name:'Menu Theme · Desert Dusk',desc:'Sand and bronze interface palette.',price:'R$ 9,90',key:'DESERT'},
-    {name:'Menu Theme · Arctic Sky',desc:'Cool ice-blue interface palette.',price:'R$ 9,90',key:'ARCTIC'},
-    {name:'Menu Theme · Sunset',desc:'Rose and sunset-colored interface palette.',price:'R$ 10,90',key:'SUNSET'},
-    {name:'Menu Theme · Cyber Lime',desc:'Bright lime and deep green interface palette.',price:'R$ 10,90',key:'CYBER'},
-    {name:'Menu Theme · Monochrome',desc:'Clean silver and graphite interface palette.',price:'R$ 7,90',key:'MONO'},
-    {name:'Menu Theme · Ocean Blue',desc:'Ocean blue interface palette.',price:'R$ 9,90',key:'OCEAN'}
+    {type:'theme',name:'Menu Theme · Neon Grid',desc:'Blue neon interface colors.',price:'R$ 7,90',key:'NEON'},
+    {type:'theme',name:'Menu Theme · Ember',desc:'Orange and charcoal interface colors.',price:'R$ 8,90',key:'EMBER'},
+    {type:'theme',name:'Menu Theme · Forest',desc:'Green forest interface colors.',price:'R$ 8,90',key:'FOREST'},
+    {type:'theme',name:'Menu Theme · Royal Violet',desc:'Violet interface colors.',price:'R$ 9,90',key:'ROYAL'},
+    {type:'theme',name:'Menu Theme · Desert Dusk',desc:'Sand and bronze interface colors.',price:'R$ 9,90',key:'DESERT'},
+    {type:'theme',name:'Menu Theme · Arctic Sky',desc:'Ice-blue interface colors.',price:'R$ 9,90',key:'ARCTIC'},
+    {type:'theme',name:'Menu Theme · Sunset',desc:'Rose and sunset interface colors.',price:'R$ 10,90',key:'SUNSET'},
+    {type:'theme',name:'Menu Theme · Cyber Lime',desc:'Lime and deep green interface colors.',price:'R$ 10,90',key:'CYBER'},
+    {type:'theme',name:'Menu Theme · Monochrome',desc:'Silver and graphite interface colors.',price:'R$ 7,90',key:'MONO'},
+    {type:'theme',name:'Menu Theme · Ocean Blue',desc:'Ocean blue interface colors.',price:'R$ 9,90',key:'OCEAN'},
+    {type:'weapon',name:'Pulse Rifle',desc:'Fictional energy rifle · 32 damage · 42-charge cell.',price:'R$ 16,90',key:'PULSE_RIFLE',gunName:'PULSE RIFLE'},
+    {type:'weapon',name:'Nova Blaster',desc:'Fictional rapid energy blaster · 17 damage · 72-charge cell.',price:'R$ 18,90',key:'NOVA_BLASTER',gunName:'NOVA BLASTER'},
+    {type:'weapon',name:'Ion Cannon',desc:'Fictional heavy energy cannon · 52 damage · 10-charge cell.',price:'R$ 22,90',key:'ION_CANNON',gunName:'ION CANNON'},
+    {type:'weapon',name:'Arc Caster',desc:'Fictional arc-energy weapon · 39 damage · 24-charge cell.',price:'R$ 19,90',key:'ARC_CASTER',gunName:'ARC CASTER'},
+    {type:'armor',name:'Energy Vest',desc:'Energy armor · 55% damage reduction.',price:'R$ 12,90',key:'ENERGY_VEST',protection:55},
+    {type:'armor',name:'Titan Exo Armor',desc:'Heavy sci-fi armor · 70% damage reduction.',price:'R$ 19,90',key:'TITAN_EXO',protection:70},
+    {type:'armor',name:'Phase Suit',desc:'Light phase armor · 60% damage reduction.',price:'R$ 16,90',key:'PHASE_SUIT',protection:60},
+    {type:'power',name:'Aegis Field',desc:'Passive power · adds 25% damage reduction.',price:'R$ 14,90',key:'AEGIS',power:'AEGIS'},
+    {type:'power',name:'Overdrive Core',desc:'Passive power · increases movement speed by 22%.',price:'R$ 14,90',key:'OVERDRIVE',power:'OVERDRIVE'},
+    {type:'power',name:'Rapid Charge',desc:'Passive power · faster shots and repeat fire while holding the trigger.',price:'R$ 16,90',key:'RAPID',power:'RAPID'},
+    {type:'power',name:'Medic Pulse',desc:'Press Q during a match to restore 35 health. Recharges in 30 seconds.',price:'R$ 16,90',key:'MEDIC',power:'MEDIC'}
   ];
+  const groups=[
+    ['THEMES','theme'],['ENERGY WEAPONS','weapon'],['ARMOR','armor'],['SPECIAL POWERS','power']
+  ];
+  function isOwned(p){
+    return storeOwned.includes(p.key)||
+      (p.type==='weapon'&&owned.includes(p.gunName))||
+      (p.type==='power'&&ownedPowers.includes(p.power));
+  }
+  function isEquipped(p){
+    if(p.type==='theme')return equippedStoreTheme===p.key;
+    if(p.type==='weapon')return weapon===p.gunName;
+    if(p.type==='armor')return armor===p.protection;
+    if(p.type==='power')return equippedPower===p.power;
+    return false;
+  }
+  function applyProduct(p){
+    if(!storeOwned.includes(p.key))storeOwned.push(p.key);
+    if(p.type==='theme'){
+      equippedStoreTheme=p.key;applyStoreTheme();
+    }else if(p.type==='weapon'){
+      if(!owned.includes(p.gunName))owned.push(p.gunName);
+      weapon=p.gunName;ammo=gun().clip;reserve=gun().clip*3;
+    }else if(p.type==='armor'){
+      armor=p.protection;
+    }else if(p.type==='power'){
+      if(!ownedPowers.includes(p.power))ownedPowers.push(p.power);
+      equippedPower=p.power;
+    }
+    saveProgress();hud();
+  }
   function renderStore(){
     $('shopTitle').textContent='PAID STORE · FAKE PIX TEST';$('items').innerHTML='';
-    products.forEach(p=>{
-      const card=document.createElement('article');card.className='item store-item';
-      const tag=document.createElement('span');tag.className='store-tag';tag.textContent='FAKE PIX · DEMO';
-      const title=document.createElement('h3');title.textContent=p.name;
-      const desc=document.createElement('p');desc.textContent=p.desc;
-      const price=document.createElement('div');price.className='price';price.textContent=p.price+' · FICTITIOUS TEST VALUE';
-      const button=document.createElement('button');
-      const isOwned=storeOwned.includes(p.key);
-      const isEquipped=isOwned&&equippedStoreTheme===p.key;
-      button.textContent=isEquipped?'EQUIPPED':isOwned?'OWNED — APPLY':'SIMULAR PIX';
-      button.disabled=isEquipped;
-      button.onclick=()=>{
-        if(isOwned){
-          equippedStoreTheme=p.key;applyStoreTheme();saveProgress();say(p.name+' APPLIED');renderStore();return;
-        }
-        openFakePixCheckout(p);
-      };
-      card.append(tag,title,desc,price,button);$('items').append(card);
+    groups.forEach(([label,type])=>{
+      const heading=document.createElement('h3');heading.className='store-category';
+      heading.textContent=label;heading.style.gridColumn='1 / -1';$('items').append(heading);
+      products.filter(p=>p.type===type).forEach(p=>{
+        const card=document.createElement('article');card.className='item store-item';
+        const tag=document.createElement('span');tag.className='store-tag';tag.textContent='FAKE PIX · DEMO';
+        const title=document.createElement('h3');title.textContent=p.name;
+        const desc=document.createElement('p');desc.textContent=p.desc;
+        const price=document.createElement('div');price.className='price';price.textContent=p.price+' · FICTITIOUS TEST VALUE';
+        const button=document.createElement('button');
+        const has=isOwned(p),equipped=isEquipped(p);
+        button.textContent=equipped?'EQUIPPED':has?'OWNED — EQUIP':'SIMULAR PIX';
+        button.disabled=equipped;
+        button.onclick=()=>{
+          if(has){applyProduct(p);say(p.name+' EQUIPPED');renderStore();return}
+          openFakePixCheckout(p);
+        };
+        card.append(tag,title,desc,price,button);$('items').append(card);
+      });
     });
     const pixCard=document.createElement('article');pixCard.className='item store-item pix-demo';
     const pixTag=document.createElement('span');pixTag.className='store-tag';pixTag.textContent='PIX ONLY · NO CARD';
     const pixTitle=document.createElement('h3');pixTitle.textContent='FAKE PIX CHECKOUT';
-    const pixDesc=document.createElement('p');pixDesc.textContent='Choose a theme, simulate Pix, confirm the test and unlock it. The selected theme changes the game interface.';
+    const pixDesc=document.createElement('p');pixDesc.textContent='Choose an item, simulate Pix and confirm the test to unlock a weapon, armor, power or theme.';
     const pixState=document.createElement('div');pixState.className='price';pixState.textContent='TEST MODE · NO REAL PAYMENT';
     pixCard.append(pixTag,pixTitle,pixDesc,pixState);$('items').append(pixCard);
     const note=document.createElement('p');note.className='store-notice';
-    note.textContent='FAKE PIX ONLY: all prices are fictional. Confirming the test unlocks and applies the selected interface theme in this browser. No bank transfer, QR code, Pix key or real charge is created. No card details are requested.';
+    note.textContent='FAKE PIX ONLY: prices are fictional. Confirming unlocks the selected game item in this browser. No bank transfer, QR code, Pix key or real charge is created. No card details are requested.';
     $('items').append(note);show('shop');hud();
   }
   function openFakePixCheckout(p){
@@ -572,17 +636,14 @@ function openRealStore(){
     const code=document.createElement('p');code.className='store-notice';code.textContent='DEMO REFERENCE: IRONFRONT-PIX-TEST-ONLY. This is not a Pix key, bank QR code or payable transaction.';
     const confirm=document.createElement('button');confirm.className='primary';confirm.textContent='CONFIRM FAKE PIX';
     confirm.onclick=()=>{
-      if(!storeOwned.includes(p.key))storeOwned.push(p.key);
-      equippedStoreTheme=p.key;
-      applyStoreTheme();saveProgress();hud();
-      say('FAKE PIX CONFIRMED — THEME UNLOCKED. NO MONEY WAS CHARGED.');
+      applyProduct(p);say('FAKE PIX CONFIRMED — '+p.name+' UNLOCKED. NO MONEY WAS CHARGED.');
       renderStore();
     };
     const cancel=document.createElement('button');cancel.textContent='CANCEL';
     cancel.onclick=renderStore;
     card.append(tag,title,desc,price,method,code,confirm,cancel);$('items').append(card);
     const note=document.createElement('p');note.className='store-notice';
-    note.textContent='LOCAL TEST ONLY: confirmation unlocks the theme without a bank transfer or real payment.';
+    note.textContent='LOCAL TEST ONLY: confirmation unlocks the item without a bank transfer or real payment.';
     $('items').append(note);show('shop');
   }
   renderStore();
@@ -673,7 +734,7 @@ function finishReload(now){
 }
 $('reload').onclick=reload;
 
-window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='r')reload();if(e.key.toLowerCase()==='1'&&mode==='BATTLE ROYALE'){knifeSelected=true;say('KNIFE EQUIPPED — PRESS E NEAR A SUPPLY DROP')}if(e.key.toLowerCase()==='2'&&mode==='BATTLE ROYALE'){knifeSelected=false;say('WEAPON EQUIPPED')}if(e.key.toLowerCase()==='e')useKnifeTool();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='q'&&!e.repeat)activateEquippedPower();if(e.key.toLowerCase()==='r')reload();if(e.key.toLowerCase()==='1'&&mode==='BATTLE ROYALE'){knifeSelected=true;say('KNIFE EQUIPPED — PRESS E NEAR A SUPPLY DROP')}if(e.key.toLowerCase()==='2'&&mode==='BATTLE ROYALE'){knifeSelected=false;say('WEAPON EQUIPPED')}if(e.key.toLowerCase()==='e')useKnifeTool();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 let lastMouseX=null;canvas.addEventListener('pointermove',e=>{let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*LOGICAL_WIDTH/r.width;if(lastMouseX!==null)player.a+=(x-lastMouseX)/LOGICAL_WIDTH*2.1;lastMouseX=x});canvas.addEventListener('pointerleave',()=>lastMouseX=null);
 canvas.addEventListener('pointerdown',e=>{const rect=canvas.getBoundingClientRect(),sx=LOGICAL_WIDTH/rect.width,sy=LOGICAL_HEIGHT/rect.height,cx=(e.clientX-rect.left)*sx,cy=(e.clientY-rect.top)*sy;if(mode==='BATTLE ROYALE'&&cx>=24&&cx<=78&&cy>=438&&cy<=496){e.preventDefault();knifeSelected=true;mouseHeld=false;say('KNIFE EQUIPPED');return}if(e.button===0||e.button===2){e.preventDefault();canvas.setPointerCapture(e.pointerId);mouseHeld=true;fire()}});
 window.addEventListener('pointerup',()=>mouseHeld=false);
@@ -695,7 +756,7 @@ function fire(){
     }else say('TOO FAR — MOVE CLOSER');
     hud();return;
   }
-  if(reloadUntil>now||now-lastShot<gun().rate)return;
+  if(reloadUntil>now||now-lastShot<gun().rate*(equippedPower==='RAPID'?.8:1))return;
   let target=null,best=Infinity;
   // Manual shot only: the crosshair direction must intersect the enemy's small on-screen hit area.
   enemies.forEach(e=>{
@@ -1187,7 +1248,7 @@ function useKnifeTool(){
   else{reserve+=35;say('SUPPLY OPENED: +35 AMMO')}
   brLoot.splice(nearest,1);
 }
-function update(dt){let speed=(mode==='BATTLE ROYALE'?3.8:2.8)*dt*(keys.shift?1.5:1),f=(keys.w?1:0)-(keys.s?1:0),s=(keys.d?1:0)-(keys.a?1:0);if(keys.arrowleft)player.a-=2.4*dt;if(keys.arrowright)player.a+=2.4*dt;let dx=(Math.cos(player.a)*f-Math.sin(player.a)*s)*speed,dy=(Math.sin(player.a)*f+Math.cos(player.a)*s)*speed;if(free(player.x+dx,player.y))player.x+=dx;if(free(player.x,player.y+dy))player.y+=dy;enemies.forEach(e=>{let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);if(d>.75&&!blocked(e.x,e.y,player.x,player.y)){let nx=e.x+dx/d*e.speed*dt,ny=e.y+dy/d*e.speed*dt;if(free(nx,e.y,.14))e.x=nx;if(free(e.x,ny,.14))e.y=ny}if(d<.8&&Math.random()<dt*.7){let damage=Math.max(1,5*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage}if(d<11&&d>.9&&performance.now()>=e.nextShot&&!blocked(e.x,e.y,player.x,player.y)){const a=Math.atan2(player.y-e.y,player.x-e.x);enemyBolts.push({x:e.x,y:e.y,vx:Math.cos(a)*5.2,vy:Math.sin(a)*5.2,life:2.5});e.nextShot=performance.now()+(e.boss?1250:2050)+Math.random()*650}});enemyBolts=enemyBolts.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(wall(b.x,b.y)||b.life<=0)return false;if(Math.hypot(b.x-player.x,b.y-player.y)<.25){const damage=Math.max(2,8*(1-armor/100));if(mode==='DEFENSE')baseHp-=damage;else hp-=damage;return false}return true});if(mode==='BATTLE ROYALE'){
+function update(dt){let speed=(mode==='BATTLE ROYALE'?3.8:2.8)*dt*(keys.shift?1.5:1)*(equippedPower==='OVERDRIVE'?1.22:1),f=(keys.w?1:0)-(keys.s?1:0),s=(keys.d?1:0)-(keys.a?1:0);if(keys.arrowleft)player.a-=2.4*dt;if(keys.arrowright)player.a+=2.4*dt;let dx=(Math.cos(player.a)*f-Math.sin(player.a)*s)*speed,dy=(Math.sin(player.a)*f+Math.cos(player.a)*s)*speed;if(free(player.x+dx,player.y))player.x+=dx;if(free(player.x,player.y+dy))player.y+=dy;enemies.forEach(e=>{let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);if(d>.75&&!blocked(e.x,e.y,player.x,player.y)){let nx=e.x+dx/d*e.speed*dt,ny=e.y+dy/d*e.speed*dt;if(free(nx,e.y,.14))e.x=nx;if(free(e.x,ny,.14))e.y=ny}if(d<.8&&Math.random()<dt*.7){let damage=Math.max(1,5*playerDamageMultiplier());if(mode==='DEFENSE')baseHp-=damage;else hp-=damage}if(d<11&&d>.9&&performance.now()>=e.nextShot&&!blocked(e.x,e.y,player.x,player.y)){const a=Math.atan2(player.y-e.y,player.x-e.x);enemyBolts.push({x:e.x,y:e.y,vx:Math.cos(a)*5.2,vy:Math.sin(a)*5.2,life:2.5});e.nextShot=performance.now()+(e.boss?1250:2050)+Math.random()*650}});enemyBolts=enemyBolts.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(wall(b.x,b.y)||b.life<=0)return false;if(Math.hypot(b.x-player.x,b.y-player.y)<.25){const damage=Math.max(2,8*playerDamageMultiplier());if(mode==='DEFENSE')baseHp-=damage;else hp-=damage;return false}return true});if(mode==='BATTLE ROYALE'){
   const elapsed=Math.max(0,(performance.now()-brStartedAt)/1000);
   brZoneRadius=Math.max(3.1,10.8-Math.max(0,elapsed-8)*.12);
   const outside=Math.hypot(player.x-brZoneCenter.x,player.y-brZoneCenter.y)>brZoneRadius;
@@ -1197,7 +1258,7 @@ function update(dt){let speed=(mode==='BATTLE ROYALE'?3.8:2.8)*dt*(keys.shift?1.
   if(performance.now()>brDropUntil&&brDropUntil&&performance.now()-brDropUntil<80)say('LANDED — FIND LOOT AND STAY INSIDE THE SAFE ZONE');
 }
 if(f||s)footstepPhase+=dt*12;cameraKick=Math.max(0,cameraKick-dt*2.8);if(hp<=0||baseHp<=0){finishGameOver(hp<=0?'PLAYER DOWN':'BASE DESTROYED')}}
-function loop(now){if(!playing||paused)return;finishReload(now);let dt=Math.min(.04,(now-last)/1000||.016);last=now;if(mouseHeld&&weapon==='MACHINE GUN')fire();update(dt);
+function loop(now){if(!playing||paused)return;finishReload(now);let dt=Math.min(.04,(now-last)/1000||.016);last=now;if(mouseHeld&&(weapon==='MACHINE GUN'||equippedPower==='RAPID'))fire();update(dt);
 if(mode==='DUEL'&&onlineReady&&now-lastNetSend>50){sendNet({type:'state',x:player.x,y:player.y,a:player.a,hp});lastNetSend=now}
 else if(mode==='5V5'&&onlineReady&&now-lastNetSend>50){const me=teamPlayers[myPlayerId];if(me){me.x=player.x;me.y=player.y;me.a=player.a;if(onlineRole==='host')teamBroadcast({type:'teamState',player:me});else sendNet({type:'state',x:player.x,y:player.y,a:player.a})}lastNetSend=now}
 advanceWave(now);render();hud();requestAnimationFrame(loop)}
