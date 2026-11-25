@@ -346,6 +346,7 @@ let powerCooldownUntil=0;
 let equippedSkin={weapon:'DEFAULT',armor:'DEFAULT'};
 let equippedStoreTheme='DEFAULT';
 let equippedStoreKnife='DEFAULT';
+let knifePowerUntil=0,knifePowerCooldownUntil=0;
 const storeThemePresets={
   DEFAULT:{gold:'#d5a847',line:'#2b3b43',panel:'#121b21',bg:'#090e12'},
   NEON:{gold:'#55d9ff',line:'#23627a',panel:'#0c2532',bg:'#07121c'},
@@ -471,11 +472,20 @@ let scenery=[];
 const spawnPoints={'ATTACK':{x:2.5,y:11.5,a:0},'ADVANCE':{x:2.5,y:11.5,a:0},'DEFENSE':{x:12.5,y:11.5,a:0},'SURVIVAL':{x:2.5,y:11.5,a:0},'BATTLE ROYALE':{x:11.5,y:12.5,a:-Math.PI/2}};
 const gun=()=>guns.find(g=>g.name===weapon);
 function playerDamageMultiplier(){
-  const reduction=Math.min(90,Math.max(0,armor)+(equippedPower==='AEGIS'?25:0));
+  const knifeShield=knifeSelected&&equippedStoreKnife==='ARCTIC'&&performance.now()<knifePowerUntil?50:0;
+  const reduction=Math.min(90,Math.max(0,armor)+(equippedPower==='AEGIS'?25:0)+knifeShield);
   return Math.max(.1,1-reduction/100);
 }
 function activateEquippedPower(){
   if(!playing||paused){say('START A MATCH TO USE YOUR POWER');return}
+  if(knifeSelected&&equippedStoreKnife!=='DEFAULT'){
+    const now=performance.now();
+    if(now<knifePowerCooldownUntil){say('KNIFE POWER RECHARGING');return}
+    if(equippedStoreKnife==='CARBON'){knifePowerUntil=now+5000;knifePowerCooldownUntil=now+15000;say('SHADOW DASH — SPEED BOOST FOR 5 SECONDS');}
+    else if(equippedStoreKnife==='ARCTIC'){knifePowerUntil=now+5000;knifePowerCooldownUntil=now+18000;say('FROST GUARD — SHIELD FOR 5 SECONDS');}
+    else if(equippedStoreKnife==='EMBER'){hp=Math.min(100,hp+25);knifePowerCooldownUntil=now+20000;hud();say('PHOENIX SPARK — +25 HEALTH');}
+    return;
+  }
   if(equippedPower==='MEDIC'){
     const now=performance.now();
     if(now<powerCooldownUntil){say('MEDIC PULSE RECHARGING');return}
@@ -576,9 +586,12 @@ function openRealStore(){
     {type:'power',name:'Overdrive Core',desc:'Passive power · increases movement speed by 22%.',price:'R$ 14,90',key:'OVERDRIVE',power:'OVERDRIVE'},
     {type:'power',name:'Rapid Charge',desc:'Passive power · faster shots and repeat fire while holding the trigger.',price:'R$ 16,90',key:'RAPID',power:'RAPID'},
     {type:'power',name:'Medic Pulse',desc:'Press Q during a match to restore 35 health. Recharges in 30 seconds.',price:'R$ 16,90',key:'MEDIC',power:'MEDIC'},
-    {type:'knife',name:'Knife Skin · Carbon',desc:'Cosmetic dark-carbon knife finish.',price:'DEMO ONLY',key:'KNIFE_CARBON',skin:'CARBON'},
-    {type:'knife',name:'Knife Skin · Arctic',desc:'Cosmetic ice-silver knife finish.',price:'DEMO ONLY',key:'KNIFE_ARCTIC',skin:'ARCTIC'},
-    {type:'knife',name:'Knife Skin · Ember',desc:'Cosmetic warm-metal knife finish.',price:'DEMO ONLY',key:'KNIFE_EMBER',skin:'EMBER'}
+    {type:'knife',name:'Knife Skin · Carbon',desc:'Carbon knife + SHADOW DASH: 5-second speed boost (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_CARBON',skin:'CARBON'},
+    {type:'knife',name:'Knife Skin · Arctic',desc:'Arctic knife + FROST GUARD: 5-second shield (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_ARCTIC',skin:'ARCTIC'},
+    {type:'knife',name:'Knife Skin · Ember',desc:'Ember knife + PHOENIX SPARK: restore 25 health (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_EMBER',skin:'EMBER'},
+
+    
+    
   ];
   const groups=[
     ['THEMES','theme'],['ENERGY WEAPONS','weapon'],['ARMOR','armor'],['SPECIAL POWERS','power'],['KNIVES','knife']
@@ -1298,7 +1311,7 @@ function useKnifeTool(){
   else{reserve+=35;say('SUPPLY OPENED: +35 AMMO')}
   brLoot.splice(nearest,1);
 }
-function update(dt){let speed=(mode==='BATTLE ROYALE'?3.8:2.8)*dt*(keys.shift?1.5:1)*(equippedPower==='OVERDRIVE'?1.22:1),f=(keys.w?1:0)-(keys.s?1:0),s=(keys.d?1:0)-(keys.a?1:0);if(keys.arrowleft)player.a-=2.4*dt;if(keys.arrowright)player.a+=2.4*dt;let dx=(Math.cos(player.a)*f-Math.sin(player.a)*s)*speed,dy=(Math.sin(player.a)*f+Math.cos(player.a)*s)*speed;if(free(player.x+dx,player.y))player.x+=dx;if(free(player.x,player.y+dy))player.y+=dy;enemies.forEach(e=>{let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);if(d>.75&&!blocked(e.x,e.y,player.x,player.y)){let nx=e.x+dx/d*e.speed*dt,ny=e.y+dy/d*e.speed*dt;if(free(nx,e.y,.14))e.x=nx;if(free(e.x,ny,.14))e.y=ny}if(d<.8&&Math.random()<dt*.7){let damage=Math.max(1,5*playerDamageMultiplier());if(mode==='DEFENSE')baseHp-=damage;else hp-=damage}if(d<11&&d>.9&&performance.now()>=e.nextShot&&!blocked(e.x,e.y,player.x,player.y)){const a=Math.atan2(player.y-e.y,player.x-e.x);enemyBolts.push({x:e.x,y:e.y,vx:Math.cos(a)*5.2,vy:Math.sin(a)*5.2,life:2.5});e.nextShot=performance.now()+(e.boss?1250:2050)+Math.random()*650}});enemyBolts=enemyBolts.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(wall(b.x,b.y)||b.life<=0)return false;if(Math.hypot(b.x-player.x,b.y-player.y)<.25){const damage=Math.max(2,8*playerDamageMultiplier());if(mode==='DEFENSE')baseHp-=damage;else hp-=damage;return false}return true});if(mode==='BATTLE ROYALE'){
+function update(dt){let speed=(mode==='BATTLE ROYALE'?3.8:2.8)*dt*(keys.shift?1.5:1)*(equippedPower==='OVERDRIVE'?1.22:1)*(knifeSelected&&equippedStoreKnife==='CARBON'&&performance.now()<knifePowerUntil?1.6:1),f=(keys.w?1:0)-(keys.s?1:0),s=(keys.d?1:0)-(keys.a?1:0);if(keys.arrowleft)player.a-=2.4*dt;if(keys.arrowright)player.a+=2.4*dt;let dx=(Math.cos(player.a)*f-Math.sin(player.a)*s)*speed,dy=(Math.sin(player.a)*f+Math.cos(player.a)*s)*speed;if(free(player.x+dx,player.y))player.x+=dx;if(free(player.x,player.y+dy))player.y+=dy;enemies.forEach(e=>{let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy);if(d>.75&&!blocked(e.x,e.y,player.x,player.y)){let nx=e.x+dx/d*e.speed*dt,ny=e.y+dy/d*e.speed*dt;if(free(nx,e.y,.14))e.x=nx;if(free(e.x,ny,.14))e.y=ny}if(d<.8&&Math.random()<dt*.7){let damage=Math.max(1,5*playerDamageMultiplier());if(mode==='DEFENSE')baseHp-=damage;else hp-=damage}if(d<11&&d>.9&&performance.now()>=e.nextShot&&!blocked(e.x,e.y,player.x,player.y)){const a=Math.atan2(player.y-e.y,player.x-e.x);enemyBolts.push({x:e.x,y:e.y,vx:Math.cos(a)*5.2,vy:Math.sin(a)*5.2,life:2.5});e.nextShot=performance.now()+(e.boss?1250:2050)+Math.random()*650}});enemyBolts=enemyBolts.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(wall(b.x,b.y)||b.life<=0)return false;if(Math.hypot(b.x-player.x,b.y-player.y)<.25){const damage=Math.max(2,8*playerDamageMultiplier());if(mode==='DEFENSE')baseHp-=damage;else hp-=damage;return false}return true});if(mode==='BATTLE ROYALE'){
   const elapsed=Math.max(0,(performance.now()-brStartedAt)/1000);
   brZoneRadius=Math.max(3.1,10.8-Math.max(0,elapsed-8)*.12);
   const outside=Math.hypot(player.x-brZoneCenter.x,player.y-brZoneCenter.y)>brZoneRadius;
