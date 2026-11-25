@@ -494,46 +494,74 @@ function blocked(x1,y1,x2,y2){let d=Math.hypot(x2-x1,y2-y1),n=Math.ceil(d*12);fo
 function openShop(type){$('shopTitle').textContent=type==='WEAPON'?'WEAPON ARMORY':'ARMOR SHOP';let arr=type==='WEAPON'?guns:vests;$('items').innerHTML='';arr.forEach(it=>{let el=document.createElement('article');el.className='item';let desc=type==='WEAPON'?it.damage+' damage · '+it.clip+' round magazine · 100% durability':'Damage reduction: '+it.protection+'%';let has=type==='WEAPON'?owned.includes(it.name):armor===it.protection;el.innerHTML='<h3>'+it.name+'</h3><p>'+desc+'</p><div class="price">'+(it.cost===0?'FREE':it.cost+' CREDITS')+'</div>';let b=document.createElement('button');b.textContent=has?'EQUIPPED':type==='WEAPON'?'BUY / EQUIP':'BUY / EQUIP';b.onclick=()=>{if(has){say('Already equipped.');return}if(coins<it.cost){say('NOT ENOUGH CREDITS');return}coins-=it.cost;if(type==='WEAPON'){owned.push(it.name);weapon=it.name;ammo=it.clip;reserve=it.clip*3}else armor=it.protection;hud();say(it.name+' EQUIPPED');openShop(type)};el.append(b);$('items').append(el)});show('shop');hud()}
 $('weapons').onclick=()=>openShop('WEAPON');$('armor').onclick=()=>openShop('ARMOR');$('back').onclick=()=>show('menu');
 function openRealStore(){
-  $('shopTitle').textContent='PIX STORE · DEMO';$('items').innerHTML='';
   const products=[
-    {name:'Weapon Skin · Aurora',desc:'Aurora cosmetic weapon skin.',price:'R$ 7,90',key:'AURORA',slot:'weapon'},
-    {name:'Weapon Skin · Carbon',desc:'Carbon cosmetic weapon skin.',price:'R$ 9,90',key:'CARBON',slot:'weapon'},
-    {name:'Armor Skin · Ranger',desc:'Ranger cosmetic armor skin.',price:'R$ 9,90',key:'RANGER',slot:'armor'},
-    {name:'Armor Skin · Gold',desc:'Gold cosmetic armor skin.',price:'R$ 14,90',key:'GOLD',slot:'armor'}
+    {name:'Weapon Skin · Aurora',desc:'Bright aurora finish for your weapon.',price:'R$ 7,90',key:'AURORA',slot:'weapon'},
+    {name:'Weapon Skin · Carbon',desc:'Matte carbon tactical finish.',price:'R$ 9,90',key:'CARBON',slot:'weapon'},
+    {name:'Weapon Skin · Desert Camo',desc:'Desert camouflage weapon finish.',price:'R$ 8,90',key:'DESERT',slot:'weapon'},
+    {name:'Weapon Skin · Neon Pulse',desc:'Neon blue futuristic weapon finish.',price:'R$ 12,90',key:'NEON',slot:'weapon'},
+    {name:'Weapon Skin · Goldline',desc:'Premium gold-tone weapon finish.',price:'R$ 14,90',key:'GOLDLINE',slot:'weapon'},
+    {name:'Weapon Skin · Arctic Vector',desc:'Cold arctic camouflage weapon finish.',price:'R$ 11,90',key:'ARCTICW',slot:'weapon'},
+    {name:'Armor Skin · Ranger',desc:'Ranger field uniform appearance.',price:'R$ 9,90',key:'RANGER',slot:'armor'},
+    {name:'Armor Skin · Gold',desc:'Gold-tone armor appearance.',price:'R$ 14,90',key:'GOLD',slot:'armor'},
+    {name:'Armor Skin · Arctic',desc:'Arctic winter armor appearance.',price:'R$ 12,90',key:'ARCTICA',slot:'armor'},
+    {name:'Armor Skin · Woodland',desc:'Woodland camouflage armor appearance.',price:'R$ 10,90',key:'WOODLAND',slot:'armor'}
   ];
-  products.forEach(p=>{
-    const card=document.createElement('article');card.className='item store-item';
-    const tag=document.createElement('span');tag.className='store-tag';tag.textContent='FAKE PIX · DEMO';
+  function renderStore(){
+    $('shopTitle').textContent='PIX STORE · TEST MODE';$('items').innerHTML='';
+    products.forEach(p=>{
+      const card=document.createElement('article');card.className='item store-item';
+      const tag=document.createElement('span');tag.className='store-tag';tag.textContent='FAKE PIX · TEST';
+      const title=document.createElement('h3');title.textContent=p.name;
+      const desc=document.createElement('p');desc.textContent=p.desc;
+      const price=document.createElement('div');price.className='price';price.textContent=p.price+' · VALOR FICTÍCIO';
+      const button=document.createElement('button');
+      const isOwned=storeOwned.includes(p.key);
+      const isEquipped=isOwned&&equippedSkin[p.slot]===p.key;
+      button.textContent=isEquipped?'EQUIPPED':isOwned?'OWNED — EQUIP':'SIMULAR PIX';
+      button.disabled=isEquipped;
+      button.onclick=()=>{
+        if(isOwned){
+          equippedSkin[p.slot]=p.key;saveProgress();say(p.name+' EQUIPPED');renderStore();return;
+        }
+        openFakePixCheckout(p);
+      };
+      card.append(tag,title,desc,price,button);$('items').append(card);
+    });
+    const pixCard=document.createElement('article');pixCard.className='item store-item pix-demo';
+    const pixTag=document.createElement('span');pixTag.className='store-tag';pixTag.textContent='PIX ONLY · NO CARD';
+    const pixTitle=document.createElement('h3');pixTitle.textContent='FAKE PIX TEST';
+    const pixDesc=document.createElement('p');pixDesc.textContent='Choose any item and press SIMULAR PIX to open a test checkout and unlock it after confirmation.';
+    const pixState=document.createElement('div');pixState.className='price';pixState.textContent='TEST MODE · NO REAL PAYMENT';
+    pixCard.append(pixTag,pixTitle,pixDesc,pixState);$('items').append(pixCard);
+    const note=document.createElement('p');note.className='store-notice';
+    note.textContent='FAKE PIX ONLY: values are fictional. Confirming a test checkout unlocks the selected game item in this browser. No bank transfer, valid Pix QR code, Pix key or real charge is created. No card details are requested.';
+    $('items').append(note);show('shop');hud();
+  }
+  function openFakePixCheckout(p){
+    $('shopTitle').textContent='PIX TEST CHECKOUT';$('items').innerHTML='';
+    const card=document.createElement('article');card.className='item store-item pix-demo';
+    const tag=document.createElement('span');tag.className='store-tag';tag.textContent='SIMULAÇÃO DE PIX · SEM COBRANÇA';
     const title=document.createElement('h3');title.textContent=p.name;
-    const desc=document.createElement('p');desc.textContent=p.desc;
-    const price=document.createElement('div');price.className='price';price.textContent=p.price+' · SIMULATED PRICE';
-    const button=document.createElement('button');
-    const isOwned=storeOwned.includes(p.key);
-    const isEquipped=isOwned&&equippedSkin[p.slot]===p.key;
-    button.textContent=isEquipped?'EQUIPPED':isOwned?'OWNED — EQUIP':'SIMULAR PIX';
-    button.disabled=isEquipped;
-    button.onclick=()=>{
-      if(isOwned){
-        equippedSkin[p.slot]=p.key;saveProgress();say(p.name+' EQUIPPED');openRealStore();return;
-      }
-      storeOwned.push(p.key);
+    const desc=document.createElement('p');desc.textContent='Item selecionado para compra de teste.';
+    const price=document.createElement('div');price.className='price';price.textContent=p.price+' · VALOR FICTÍCIO';
+    const method=document.createElement('p');method.textContent='Método selecionado: PIX (FAKE)';
+    const code=document.createElement('p');code.className='store-notice';code.textContent='CÓDIGO DE TESTE: IRONFRONT-PIX-DEMO-NAO-PAGAVEL. Este texto não é uma chave Pix nem pode ser usado para transferir dinheiro.';
+    const confirm=document.createElement('button');confirm.className='primary';confirm.textContent='CONFIRMAR PIX FICTÍCIO';
+    confirm.onclick=()=>{
+      if(!storeOwned.includes(p.key))storeOwned.push(p.key);
       equippedSkin[p.slot]=p.key;
       saveProgress();hud();
-      say('PIX DE TESTE APROVADO — ITEM LIBERADO. NENHUM DINHEIRO FOI COBRADO.');
-      openRealStore();
+      say('COMPRA DE TESTE APROVADA — ITEM LIBERADO. NENHUM DINHEIRO FOI COBRADO.');
+      renderStore();
     };
-    card.append(tag,title,desc,price,button);$('items').append(card);
-  });
-  const pixCard=document.createElement('article');pixCard.className='item store-item pix-demo';
-  const pixTag=document.createElement('span');pixTag.className='store-tag';pixTag.textContent='PIX ONLY · NO CARD';
-  const pixTitle=document.createElement('h3');pixTitle.textContent='PIX DE TESTE';
-  const pixDesc=document.createElement('p');pixDesc.textContent='Press SIMULAR PIX on an item to test the purchase flow. The item is unlocked for this browser profile.';
-  const pixState=document.createElement('div');pixState.className='price';pixState.textContent='SIMULATION ONLY · NO REAL PAYMENT';
-  const pixButton=document.createElement('button');pixButton.textContent='PIX FAKE — TEST MODE';pixButton.disabled=true;
-  pixCard.append(pixTag,pixTitle,pixDesc,pixState,pixButton);$('items').append(pixCard);
-  const note=document.createElement('p');note.className='store-notice';
-  note.textContent='DEMO ONLY: SIMULAR PIX grants the selected game item without charging money. No bank transfer, QR code, Pix key or real payment is created. No card details are requested.';
-  $('items').append(note);show('shop');hud();
+    const cancel=document.createElement('button');cancel.textContent='CANCELAR';
+    cancel.onclick=renderStore;
+    card.append(tag,title,desc,price,method,code,confirm,cancel);$('items').append(card);
+    const note=document.createElement('p');note.className='store-notice';
+    note.textContent='TESTE LOCAL: ao confirmar, o jogo libera o item. Não há QR Code, transferência bancária ou pagamento real.';
+    $('items').append(note);show('shop');
+  }
+  renderStore();
 }
 $('realStore').onclick=openRealStore;
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('selected',x===b));say('SELECTED OPERATION: '+mode)});
