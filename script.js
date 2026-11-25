@@ -494,31 +494,45 @@ function blocked(x1,y1,x2,y2){let d=Math.hypot(x2-x1,y2-y1),n=Math.ceil(d*12);fo
 function openShop(type){$('shopTitle').textContent=type==='WEAPON'?'WEAPON ARMORY':'ARMOR SHOP';let arr=type==='WEAPON'?guns:vests;$('items').innerHTML='';arr.forEach(it=>{let el=document.createElement('article');el.className='item';let desc=type==='WEAPON'?it.damage+' damage · '+it.clip+' round magazine · 100% durability':'Damage reduction: '+it.protection+'%';let has=type==='WEAPON'?owned.includes(it.name):armor===it.protection;el.innerHTML='<h3>'+it.name+'</h3><p>'+desc+'</p><div class="price">'+(it.cost===0?'FREE':it.cost+' CREDITS')+'</div>';let b=document.createElement('button');b.textContent=has?'EQUIPPED':type==='WEAPON'?'BUY / EQUIP':'BUY / EQUIP';b.onclick=()=>{if(has){say('Already equipped.');return}if(coins<it.cost){say('NOT ENOUGH CREDITS');return}coins-=it.cost;if(type==='WEAPON'){owned.push(it.name);weapon=it.name;ammo=it.clip;reserve=it.clip*3}else armor=it.protection;hud();say(it.name+' EQUIPPED');openShop(type)};el.append(b);$('items').append(el)});show('shop');hud()}
 $('weapons').onclick=()=>openShop('WEAPON');$('armor').onclick=()=>openShop('ARMOR');$('back').onclick=()=>show('menu');
 function openRealStore(){
-  $('shopTitle').textContent='STORE · PIX ONLY';$('items').innerHTML='';
+  $('shopTitle').textContent='PIX STORE · DEMO';$('items').innerHTML='';
   const products=[
-    {name:'Weapon Skin · Aurora',desc:'Aurora cosmetic weapon skin.'},
-    {name:'Weapon Skin · Carbon',desc:'Carbon cosmetic weapon skin.'},
-    {name:'Armor Skin · Ranger',desc:'Ranger cosmetic armor skin.'},
-    {name:'Armor Skin · Gold',desc:'Gold cosmetic armor skin.'}
+    {name:'Weapon Skin · Aurora',desc:'Aurora cosmetic weapon skin.',price:'R$ 7,90',key:'AURORA',slot:'weapon'},
+    {name:'Weapon Skin · Carbon',desc:'Carbon cosmetic weapon skin.',price:'R$ 9,90',key:'CARBON',slot:'weapon'},
+    {name:'Armor Skin · Ranger',desc:'Ranger cosmetic armor skin.',price:'R$ 9,90',key:'RANGER',slot:'armor'},
+    {name:'Armor Skin · Gold',desc:'Gold cosmetic armor skin.',price:'R$ 14,90',key:'GOLD',slot:'armor'}
   ];
   products.forEach(p=>{
     const card=document.createElement('article');card.className='item store-item';
-    const tag=document.createElement('span');tag.className='store-tag';tag.textContent='PIX PAYMENT';
+    const tag=document.createElement('span');tag.className='store-tag';tag.textContent='FAKE PIX · DEMO';
     const title=document.createElement('h3');title.textContent=p.name;
     const desc=document.createElement('p');desc.textContent=p.desc;
-    const price=document.createElement('div');price.className='price';price.textContent='PIX PRICE NOT CONFIGURED';
-    const button=document.createElement('button');button.textContent='PIX CHECKOUT NOT AVAILABLE';button.disabled=true;
+    const price=document.createElement('div');price.className='price';price.textContent=p.price+' · SIMULATED PRICE';
+    const button=document.createElement('button');
+    const isOwned=storeOwned.includes(p.key);
+    const isEquipped=isOwned&&equippedSkin[p.slot]===p.key;
+    button.textContent=isEquipped?'EQUIPPED':isOwned?'OWNED — EQUIP':'SIMULAR PIX';
+    button.disabled=isEquipped;
+    button.onclick=()=>{
+      if(isOwned){
+        equippedSkin[p.slot]=p.key;saveProgress();say(p.name+' EQUIPPED');openRealStore();return;
+      }
+      storeOwned.push(p.key);
+      equippedSkin[p.slot]=p.key;
+      saveProgress();hud();
+      say('PIX DE TESTE APROVADO — ITEM LIBERADO. NENHUM DINHEIRO FOI COBRADO.');
+      openRealStore();
+    };
     card.append(tag,title,desc,price,button);$('items').append(card);
   });
   const pixCard=document.createElement('article');pixCard.className='item store-item pix-demo';
   const pixTag=document.createElement('span');pixTag.className='store-tag';pixTag.textContent='PIX ONLY · NO CARD';
-  const pixTitle=document.createElement('h3');pixTitle.textContent='PIX';
-  const pixDesc=document.createElement('p');pixDesc.textContent='The paid store does not use game credits and does not request card details.';
-  const pixState=document.createElement('div');pixState.className='price';pixState.textContent='DEMO — NOT CONNECTED';
-  const pixButton=document.createElement('button');pixButton.textContent='PIX CHECKOUT NOT CONNECTED';pixButton.disabled=true;
+  const pixTitle=document.createElement('h3');pixTitle.textContent='PIX DE TESTE';
+  const pixDesc=document.createElement('p');pixDesc.textContent='Press SIMULAR PIX on an item to test the purchase flow. The item is unlocked for this browser profile.';
+  const pixState=document.createElement('div');pixState.className='price';pixState.textContent='SIMULATION ONLY · NO REAL PAYMENT';
+  const pixButton=document.createElement('button');pixButton.textContent='PIX FAKE — TEST MODE';pixButton.disabled=true;
   pixCard.append(pixTag,pixTitle,pixDesc,pixState,pixButton);$('items').append(pixCard);
   const note=document.createElement('p');note.className='store-notice';
-  note.textContent='PAID STORE: Pix only. No game-credit purchases, no card fields, no QR code and no real charge until a secure payment provider is connected.';
+  note.textContent='DEMO ONLY: SIMULAR PIX grants the selected game item without charging money. No bank transfer, QR code, Pix key or real payment is created. No card details are requested.';
   $('items').append(note);show('shop');hud();
 }
 $('realStore').onclick=openRealStore;
