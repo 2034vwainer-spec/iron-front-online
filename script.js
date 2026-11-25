@@ -788,7 +788,7 @@ $('jump').onclick=()=>{
   brStartedAt=performance.now();brDropUntil=brStartedAt+5200;brLastZoneTick=brStartedAt;
   launch();say('PARACHUTE DROP — LANDING IN 5 SECONDS. LOOT IS SCATTERED AROUND THE TOWN.');
 };
-$('quit').onclick=()=>{playing=false;if(mode==='DUEL'||mode==='5V5'){sendNet({type:'leave'});closeOnline()}show('menu');say('MISSION ENDED')};
+$('fullscreen').onclick=toggleFullscreen;\nfunction toggleFullscreen(){const target=$('game');if(!document.fullscreenElement){target.requestFullscreen?.().then(()=>{$('fullscreen').textContent='EXIT FULL SCREEN ⛶'}).catch(()=>say('FULL SCREEN NOT AVAILABLE — PRESS F11'));}else{document.exitFullscreen?.().then(()=>{$('fullscreen').textContent='FULL SCREEN ⛶'});}}\ndocument.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'EXIT FULL SCREEN ⛶':'FULL SCREEN ⛶';});\n$('quit').onclick=()=>{playing=false;if(mode==='DUEL'||mode==='5V5'){sendNet({type:'leave'});closeOnline()}show('menu');say('MISSION ENDED')};
 $('retryGame').onclick=()=>{if(mode==='5V5'){closeOnline();onlineMode='5V5';show('online');onlineStatus('CREATE A NEW 5V5 ROOM TO PLAY AGAIN.');return}if(mode==='DUEL'){if(!onlineReady||!peerConn||!peerConn.open){onlineStatus('CONNECTION LOST — CREATE A NEW ROOM TO PLAY AGAIN.');closeOnline();show('online');return}sendNet({type:'rematch'});startOnlineRematch()}else start()};$('gameOverMenu').onclick=()=>{playing=false;paused=false;if(mode==='DUEL'||mode==='5V5'){sendNet({type:'leave'});closeOnline()}show('menu');say('MISSION ENDED — SELECT A NEW OPERATION')};
 $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'RESUME':'PAUSE';if(!paused){last=performance.now();requestAnimationFrame(loop)}};
 function reload(){
