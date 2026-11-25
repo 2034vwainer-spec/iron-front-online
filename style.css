@@ -439,3 +439,8 @@ button.primary{background:linear-gradient(180deg,#e3bd65,#bd8d37);border-color:#
 #menu .actions .store-launch:hover {
   filter: brightness(1.12);
 }
+
+/* Two-step demo checkout verification */
+.store-verification-code{display:inline-block;margin:6px 0 14px;padding:14px 20px;border:1px dashed var(--gold);border-radius:7px;background:#080f12;color:var(--gold);font:900 25px 'Roboto Mono',monospace;letter-spacing:7px}
+.store-verification-input{display:block;width:100%;max-width:360px;margin:8px 0;padding:12px;background:#080f12;border:1px solid var(--line);border-radius:5px;color:var(--text);font:700 14px 'Roboto Mono',monospace;letter-spacing:4px;text-transform:uppercase}
+.store-item label{display:block;margin-top:10px;color:var(--muted);font-size:10px;letter-spacing:1px}
