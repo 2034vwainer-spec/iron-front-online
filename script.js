@@ -784,9 +784,9 @@ function finishReload(now){
 }
 $('reload').onclick=reload;
 
-window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='q'&&!e.repeat)activateEquippedPower();if(e.key.toLowerCase()==='r')reload();if(e.key.toLowerCase()==='1'&&mode==='BATTLE ROYALE'){knifeSelected=true;say('KNIFE EQUIPPED — PRESS E NEAR A SUPPLY DROP')}if(e.key.toLowerCase()==='2'&&mode==='BATTLE ROYALE'){knifeSelected=false;say('WEAPON EQUIPPED')}if(e.key.toLowerCase()==='e')useKnifeTool();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='q'&&!e.repeat)activateEquippedPower();if(e.key.toLowerCase()==='r')reload();if(e.key.toLowerCase()==='1'&&!e.repeat){knifeSelected=true;mouseHeld=false;say('KNIFE SELECTED')}if(e.key.toLowerCase()==='2'&&!e.repeat){knifeSelected=false;mouseHeld=false;say('FIREARM SELECTED')}if(e.key.toLowerCase()==='e')useKnifeTool();if(e.key==='Escape'&&playing)$('pause').click()});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 let lastMouseX=null;canvas.addEventListener('pointermove',e=>{let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*LOGICAL_WIDTH/r.width;if(lastMouseX!==null)player.a+=(x-lastMouseX)/LOGICAL_WIDTH*2.1;lastMouseX=x});canvas.addEventListener('pointerleave',()=>lastMouseX=null);
-canvas.addEventListener('pointerdown',e=>{const rect=canvas.getBoundingClientRect(),sx=LOGICAL_WIDTH/rect.width,sy=LOGICAL_HEIGHT/rect.height,cx=(e.clientX-rect.left)*sx,cy=(e.clientY-rect.top)*sy;if(mode==='BATTLE ROYALE'&&cx>=24&&cx<=78&&cy>=438&&cy<=496){e.preventDefault();knifeSelected=true;mouseHeld=false;say('KNIFE EQUIPPED');return}if(e.button===0||e.button===2){e.preventDefault();canvas.setPointerCapture(e.pointerId);mouseHeld=true;fire()}});
+canvas.addEventListener('pointerdown',e=>{const rect=canvas.getBoundingClientRect(),sx=LOGICAL_WIDTH/rect.width,sy=LOGICAL_HEIGHT/rect.height,cx=(e.clientX-rect.left)*sx,cy=(e.clientY-rect.top)*sy;if(mode==='BATTLE ROYALE'&&cx>=24&&cx<=78&&cy>=438&&cy<=496){e.preventDefault();knifeSelected=!knifeSelected;mouseHeld=false;say(knifeSelected?'KNIFE SELECTED':'FIREARM SELECTED');return}if(e.button===0||e.button===2){e.preventDefault();canvas.setPointerCapture(e.pointerId);mouseHeld=true;fire()}});
 window.addEventListener('pointerup',()=>mouseHeld=false);
 window.addEventListener('pointercancel',()=>mouseHeld=false);
 window.addEventListener('blur',()=>mouseHeld=false);
@@ -1262,7 +1262,7 @@ function render(){
     ctx.fillStyle='#9b754b';ctx.fillRect(-4,4,8,15);
     ctx.fillStyle='#d7bd8c';ctx.fillRect(-5,4,10,3);
     ctx.restore();
-    ctx.fillStyle=knifeSelected?'#ffe49a':'#e7f2d5';ctx.font='9px monospace';ctx.fillText(knifeSelected?'SELECTED':'KNIFE',ix+4,iy+53);ctx.fillStyle='#fff';ctx.font='9px monospace';ctx.fillText('1 / E',ix+15,iy+44);
+    ctx.fillStyle=knifeSelected?'#ffe49a':'#e7f2d5';ctx.font='9px monospace';ctx.fillText(knifeSelected?'KNIFE':'FIREARM',ix+4,iy+53);ctx.fillStyle='#fff';ctx.font='9px monospace';ctx.fillText('1 / 2',ix+15,iy+44);
     ctx.restore();
   }
   // Minimap legend
