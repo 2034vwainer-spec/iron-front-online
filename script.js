@@ -526,8 +526,16 @@ function openRealStore(){
     };
     card.append(tag,title,desc,price,button);$('items').append(card);
   });
+  const pixCard=document.createElement('article');pixCard.className='item store-item pix-demo';
+  const pixTag=document.createElement('span');pixTag.className='store-tag';pixTag.textContent='PAYMENT METHOD';
+  const pixTitle=document.createElement('h3');pixTitle.textContent='PIX';
+  const pixDesc=document.createElement('p');pixDesc.textContent='Pix is the only planned real-money payment method for this store.';
+  const pixState=document.createElement('div');pixState.className='price';pixState.textContent='DEMO — NOT CONNECTED';
+  const pixButton=document.createElement('button');pixButton.textContent='TEST PIX (DEMO)';
+  pixButton.onclick=()=>say('PIX DEMO ONLY — no QR code or charge was created. A responsible adult must connect the company payment provider and secure server before real Pix payments can work.');
+  pixCard.append(pixTag,pixTitle,pixDesc,pixState,pixButton);$('items').append(pixCard);
   const note=document.createElement('p');note.className='store-notice';
-  note.textContent='IN-GAME STORE ONLY: purchases use earned game credits. Your profile inventory and balance save on this browser. No real-money checkout.';
+  note.textContent='IN-GAME PURCHASES use earned credits and save in this browser. PIX is displayed as a demo only: no payment is collected and no valid QR code is generated.';
   $('items').append(note);show('shop');hud();
 }
 $('realStore').onclick=openRealStore;
