@@ -345,6 +345,7 @@ let equippedPower='NONE';
 let powerCooldownUntil=0;
 let equippedSkin={weapon:'DEFAULT',armor:'DEFAULT'};
 let equippedStoreTheme='DEFAULT';
+let equippedStoreKnife='DEFAULT';
 const storeThemePresets={
   DEFAULT:{gold:'#d5a847',line:'#2b3b43',panel:'#121b21',bg:'#090e12'},
   NEON:{gold:'#55d9ff',line:'#23627a',panel:'#0c2532',bg:'#07121c'},
@@ -376,12 +377,13 @@ function loadProgress(){
     if(typeof data.equippedPower==='string'&&['AEGIS','OVERDRIVE','RAPID','MEDIC'].includes(data.equippedPower))equippedPower=data.equippedPower;
     if(data.equippedSkin&&typeof data.equippedSkin==='object')equippedSkin={...equippedSkin,...data.equippedSkin};
     if(typeof data.equippedStoreTheme==='string'&&storeThemePresets[data.equippedStoreTheme])equippedStoreTheme=data.equippedStoreTheme;
+    if(typeof data.equippedStoreKnife==='string')equippedStoreKnife=data.equippedStoreKnife;
     if(Number.isFinite(data.armor))armor=data.armor;
     if(typeof data.weapon==='string'&&owned.includes(data.weapon))weapon=data.weapon;
   }catch(e){}
 }
 function saveProgress(){
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify({coins,owned,storeOwned,ownedPowers,equippedPower,equippedSkin,equippedStoreTheme,armor,weapon}))}catch(e){}
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify({coins,owned,storeOwned,ownedPowers,equippedPower,equippedSkin,equippedStoreTheme,equippedStoreKnife,armor,weapon}))}catch(e){}
 }
 loadProgress();
 // One-time reset: restore the original dark-and-gold menu palette after the store theme test.
@@ -573,10 +575,13 @@ function openRealStore(){
     {type:'power',name:'Aegis Field',desc:'Passive power · adds 25% damage reduction.',price:'R$ 14,90',key:'AEGIS',power:'AEGIS'},
     {type:'power',name:'Overdrive Core',desc:'Passive power · increases movement speed by 22%.',price:'R$ 14,90',key:'OVERDRIVE',power:'OVERDRIVE'},
     {type:'power',name:'Rapid Charge',desc:'Passive power · faster shots and repeat fire while holding the trigger.',price:'R$ 16,90',key:'RAPID',power:'RAPID'},
-    {type:'power',name:'Medic Pulse',desc:'Press Q during a match to restore 35 health. Recharges in 30 seconds.',price:'R$ 16,90',key:'MEDIC',power:'MEDIC'}
+    {type:'power',name:'Medic Pulse',desc:'Press Q during a match to restore 35 health. Recharges in 30 seconds.',price:'R$ 16,90',key:'MEDIC',power:'MEDIC'},
+    {type:'knife',name:'Knife Skin · Carbon',desc:'Cosmetic dark-carbon knife finish.',price:'DEMO ONLY',key:'KNIFE_CARBON',skin:'CARBON'},
+    {type:'knife',name:'Knife Skin · Arctic',desc:'Cosmetic ice-silver knife finish.',price:'DEMO ONLY',key:'KNIFE_ARCTIC',skin:'ARCTIC'},
+    {type:'knife',name:'Knife Skin · Ember',desc:'Cosmetic warm-metal knife finish.',price:'DEMO ONLY',key:'KNIFE_EMBER',skin:'EMBER'}
   ];
   const groups=[
-    ['THEMES','theme'],['ENERGY WEAPONS','weapon'],['ARMOR','armor'],['SPECIAL POWERS','power']
+    ['THEMES','theme'],['ENERGY WEAPONS','weapon'],['ARMOR','armor'],['SPECIAL POWERS','power'],['KNIVES','knife']
   ];
   function isOwned(p){
     return storeOwned.includes(p.key)||
@@ -588,6 +593,7 @@ function openRealStore(){
     if(p.type==='weapon')return weapon===p.gunName;
     if(p.type==='armor')return armor===p.protection;
     if(p.type==='power')return equippedPower===p.power;
+    if(p.type==='knife')return equippedStoreKnife===p.skin;
     return false;
   }
   function applyProduct(p){
@@ -603,6 +609,7 @@ function openRealStore(){
       if(!ownedPowers.includes(p.power))ownedPowers.push(p.power);
       equippedPower=p.power;
     }
+    if(p.type==='knife')equippedStoreKnife=p.skin;
     saveProgress();hud();
   }
   function renderStore(){
