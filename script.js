@@ -481,10 +481,17 @@ function activateEquippedPower(){
   if(knifeSelected&&equippedStoreKnife!=='DEFAULT'){
     const now=performance.now();
     if(now<knifePowerCooldownUntil){say('KNIFE POWER RECHARGING');return}
-    if(equippedStoreKnife==='CARBON'){knifePowerUntil=now+5000;knifePowerCooldownUntil=now+15000;say('SHADOW DASH — SPEED BOOST FOR 5 SECONDS');}
-    else if(equippedStoreKnife==='ARCTIC'){knifePowerUntil=now+5000;knifePowerCooldownUntil=now+18000;say('FROST GUARD — SHIELD FOR 5 SECONDS');}
-    else if(equippedStoreKnife==='EMBER'){hp=Math.min(100,hp+25);knifePowerCooldownUntil=now+20000;hud();say('PHOENIX SPARK — +25 HEALTH');}
-    return;
+    let target=null,best=9,chosen=null;
+    enemies.forEach(e=>{const d=Math.hypot(e.x-player.x,e.y-player.y),a=Math.atan2(e.y-player.y,e.x-player.x),diff=Math.abs(angleDiff(a,player.a));if(d<best&&diff<.24&&!blocked(player.x,player.y,e.x,e.y)){best=d;target=e}});
+    if(equippedStoreKnife==='CARBON'){
+      knifePowerCooldownUntil=now+12000;chosen='SHADOW SLASH';if(target){target.hp-=55;shotFx={until:now+220,target:{x:target.x,y:target.y}};}say(target?'SHADOW SLASH — 55 DAMAGE':'SHADOW SLASH FIRED');
+    }else if(equippedStoreKnife==='ARCTIC'){
+      knifePowerCooldownUntil=now+15000;chosen='FROST SHOT';if(target){target.hp-=40;target.speed*=.55;target.slowUntil=now+3500;shotFx={until:now+300,target:{x:target.x,y:target.y}};}say(target?'FROST SHOT — 40 DAMAGE + SLOW':'FROST SHOT FIRED');
+    }else if(equippedStoreKnife==='EMBER'){
+      knifePowerCooldownUntil=now+18000;chosen='PHOENIX FIRE';if(target){target.hp-=65;shotFx={until:now+350,target:{x:target.x,y:target.y}};}say(target?'PHOENIX FIRE — 65 DAMAGE':'PHOENIX FIRE FIRED');
+    }
+    if(target&&target.hp<=0){coins+=target.boss?500:100;enemies=enemies.filter(e=>e!==target);say(target.boss?'BOSS DEFEATED +500 CREDITS':'ENEMY DEFEATED +100 CREDITS');if(!enemies.length)beginNextWave();}
+    hud();return;
   }
   if(equippedPower==='MEDIC'){
     const now=performance.now();
@@ -586,9 +593,9 @@ function openRealStore(){
     {type:'power',name:'Overdrive Core',desc:'Passive power · increases movement speed by 22%.',price:'R$ 14,90',key:'OVERDRIVE',power:'OVERDRIVE'},
     {type:'power',name:'Rapid Charge',desc:'Passive power · faster shots and repeat fire while holding the trigger.',price:'R$ 16,90',key:'RAPID',power:'RAPID'},
     {type:'power',name:'Medic Pulse',desc:'Press Q during a match to restore 35 health. Recharges in 30 seconds.',price:'R$ 16,90',key:'MEDIC',power:'MEDIC'},
-    {type:'knife',name:'Knife Skin · Carbon',desc:'Carbon knife + SHADOW DASH: 5-second speed boost (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_CARBON',skin:'CARBON'},
-    {type:'knife',name:'Knife Skin · Arctic',desc:'Arctic knife + FROST GUARD: 5-second shield (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_ARCTIC',skin:'ARCTIC'},
-    {type:'knife',name:'Knife Skin · Ember',desc:'Ember knife + PHOENIX SPARK: restore 25 health (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_EMBER',skin:'EMBER'},
+    {type:'knife',name:'Knife Skin · Carbon',desc:'Carbon knife + SHADOW SLASH: a sharp energy arc attack (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_CARBON',skin:'CARBON'},
+    {type:'knife',name:'Knife Skin · Arctic',desc:'Arctic knife + FROST SHOT: damages and slows an enemy (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_ARCTIC',skin:'ARCTIC'},
+    {type:'knife',name:'Knife Skin · Ember',desc:'Ember knife + PHOENIX FIRE: a stronger fiery attack (Q while knife is selected).',price:'DEMO ONLY',key:'KNIFE_EMBER',skin:'EMBER'},
 
     
     
