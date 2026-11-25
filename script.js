@@ -1213,11 +1213,17 @@ function render(){
     if(now<muzzleFlashUntil&&!knifeSelected){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(88,-151);ctx.lineTo(125,-169);ctx.lineTo(113,-146);ctx.lineTo(134,-132);ctx.lineTo(95,-137);ctx.closePath();ctx.fill()}
     ctx.restore();
   }else{
-    // First-person weapon silhouette for the other game modes.
-    ctx.save();ctx.translate(450+cameraKick*8,520+Math.sin(footstepPhase)*2);ctx.fillStyle='#111916';
+    // First-person knife or firearm, visible in every non-Battle-Royale mode.
+    ctx.save();ctx.translate(450+cameraKick*8,520+Math.sin(footstepPhase)*2);
+    if(knifeSelected){
+      ctx.fillStyle='#111916';ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(30,-40);ctx.lineTo(48,-52);ctx.lineTo(75,-48);ctx.lineTo(86,-25);ctx.lineTo(60,-10);ctx.lineTo(43,0);ctx.closePath();ctx.fill();
+      ctx.save();ctx.translate(42,-42);ctx.rotate(-.32);ctx.fillStyle='#5b422b';ctx.fillRect(-7,2,30,15);ctx.fillStyle='#d5b98b';ctx.fillRect(-5,3,4,13);ctx.fillRect(15,3,4,13);
+      ctx.fillStyle='#cbd4d1';ctx.beginPath();ctx.moveTo(18,1);ctx.lineTo(72,-12);ctx.lineTo(57,12);ctx.lineTo(18,17);ctx.closePath();ctx.fill();ctx.strokeStyle='#f5f7e9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(24,4);ctx.lineTo(62,-7);ctx.stroke();ctx.restore();
+    }else{
+      ctx.fillStyle='#111916';
     ctx.beginPath();ctx.moveTo(-82,0);ctx.lineTo(-58,-45);ctx.lineTo(-25,-56);ctx.lineTo(28,-54);ctx.lineTo(55,-35);ctx.lineTo(91,-29);ctx.lineTo(98,-12);ctx.lineTo(58,-8);ctx.lineTo(43,0);ctx.closePath();ctx.fill();
     ctx.fillStyle='#465247';ctx.fillRect(-26,-48,56,8);ctx.fillStyle='#202b24';ctx.fillRect(15,-30,30,17);ctx.fillStyle='#0b100e';ctx.fillRect(-5,-18,16,25);
-    if(now<muzzleFlashUntil){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(96,-27);ctx.lineTo(137,-45);ctx.lineTo(124,-22);ctx.lineTo(148,-8);ctx.lineTo(105,-12);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0bd';ctx.beginPath();ctx.arc(111,-23,9,0,Math.PI*2);ctx.fill()}
+    if(now<muzzleFlashUntil){ctx.fillStyle='#f8d58a';ctx.beginPath();ctx.moveTo(96,-27);ctx.lineTo(137,-45);ctx.lineTo(124,-22);ctx.lineTo(148,-8);ctx.lineTo(105,-12);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0bd';ctx.beginPath();ctx.arc(111,-23,9,0,Math.PI*2);ctx.fill()}}
     ctx.restore();
   }
 
