@@ -816,13 +816,21 @@ function fire(){
   const now=performance.now();
   if(!playing||paused)return;
   if(knifeSelected){
-    if(mode!=='BATTLE ROYALE'||now-knifeLastHit<550)return;
+    if(now-knifeLastHit<550)return;
     knifeLastHit=now;
     let target=null,best=1.55;
     enemies.forEach(e=>{const d=Math.hypot(e.x-player.x,e.y-player.y);if(d<best&&!blocked(player.x,player.y,e.x,e.y)){best=d;target=e}});
+    if(mode==='DUEL'&&onlineReady&&remotePlayer){
+      const d=Math.hypot(remotePlayer.x-player.x,remotePlayer.y-player.y);
+      if(d<best&&!blocked(player.x,player.y,remotePlayer.x,remotePlayer.y)){sendNet({type:'hit',damage:40});target={x:remotePlayer.x,y:remotePlayer.y};best=d}
+    }else if(mode==='5V5'&&onlineReady){
+      let opponent=null;Object.values(teamPlayers).forEach(p=>{if(p.id===myPlayerId||p.hp<=0||p.team===myTeam)return;const d=Math.hypot(p.x-player.x,p.y-player.y);if(d<best&&!blocked(player.x,player.y,p.x,p.y)){best=d;opponent=p}});
+      if(opponent){if(onlineRole==='host')teamDamage(myPlayerId,opponent.id,40);else sendNet({type:'hit',target:opponent.id,damage:40});target={x:opponent.x,y:opponent.y}}
+    }
     if(target){
-      target.hp-=40;shotFx={until:now+100,target:{x:target.x,y:target.y}};say('KNIFE HIT — 40 DAMAGE');
-      if(target.hp<=0){coins+=target.boss?500:100;enemies=enemies.filter(e=>e!==target);say(target.boss?'BOSS DEFEATED +500 CREDITS':'ENEMY DEFEATED +100 CREDITS');if(!enemies.length){hp=Math.min(100,hp+15);beginNextWave()}}
+      if(target!==remotePlayer&&!(mode==='5V5'&&target.id))target.hp-=40;
+      shotFx={until:now+160,target:{x:target.x,y:target.y}};say('KNIFE HIT — 40 DAMAGE');
+      if(target!==remotePlayer&&!(mode==='5V5'&&target.id)&&target.hp<=0){coins+=target.boss?500:100;enemies=enemies.filter(e=>e!==target);say(target.boss?'BOSS DEFEATED +500 CREDITS':'ENEMY DEFEATED +100 CREDITS');if(!enemies.length){hp=Math.min(100,hp+15);beginNextWave()}}
     }else say('TOO FAR — MOVE CLOSER');
     hud();return;
   }
@@ -1307,7 +1315,7 @@ function finishGameOver(reason){
 }
 let knifeSelected=false,knifeLastHit=0;
 function useKnifeTool(){
-  if(!playing||paused||mode!=='BATTLE ROYALE'||!knifeSelected)return;
+  if(!playing||paused||!knifeSelected)return;
   let nearest=-1,best=3.5;
   brLoot.forEach((item,i)=>{const d=Math.hypot(player.x-item.x,player.y-item.y);if(d<best){best=d;nearest=i}});
   if(nearest<0){say('KNIFE EQUIPPED — NO SUPPLY CLOSE BY. FIND A DROP AND PRESS E');return}
