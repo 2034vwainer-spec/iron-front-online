@@ -665,58 +665,49 @@ function openRealStore(){
     $('items').append(note);show('shop');hud();
   }
   function openFakePixCheckout(p){
-    $('shopTitle').textContent='PIX TEST CHECKOUT · STEP 1 OF 2';$('items').innerHTML='';
-    const card=document.createElement('article');card.className='item store-item pix-demo';
-    const tag=document.createElement('span');tag.className='store-tag';tag.textContent='FAKE PIX · NO REAL PAYMENT';
-    const title=document.createElement('h3');title.textContent=p.name;
-    const desc=document.createElement('p');desc.textContent=p.desc;
-    const price=document.createElement('div');price.className='price';price.textContent=p.price+' · FICTITIOUS VALUE';
-    const method=document.createElement('p');method.textContent='Payment method: PIX (SIMULATION ONLY)';
-    const code=document.createElement('p');code.className='store-notice';code.textContent='DEMO REFERENCE: IRONFRONT-PIX-TEST-ONLY. This is not a Pix key, bank QR code or payable transaction.';
-    const next=document.createElement('button');next.className='primary';next.textContent='CONTINUE TO VERIFICATION';
-    next.onclick=()=>openFakePixVerification(p);
-    const cancel=document.createElement('button');cancel.textContent='CANCEL';
-    cancel.onclick=renderStore;
-    card.append(tag,title,desc,price,method,code,next,cancel);$('items').append(card);
-    const note=document.createElement('p');note.className='store-notice';
-    note.textContent='STEP 1 OF 2: Review the item. The next screen asks for a temporary demo code. No payment is made.';
-    $('items').append(note);show('shop');
-  }
-  function openFakePixVerification(p){
-    $('shopTitle').textContent='VERIFICATION · STEP 2 OF 2';$('items').innerHTML='';
-    const characters='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    const verificationCode=Array.from({length:6},()=>characters[Math.floor(Math.random()*characters.length)]).join('');
-    const card=document.createElement('article');card.className='item store-item pix-demo';
-    const tag=document.createElement('span');tag.className='store-tag';tag.textContent='LOCAL DEMO VERIFICATION';
-    const title=document.createElement('h3');title.textContent='VERIFY TEST CHECKOUT';
-    const desc=document.createElement('p');desc.textContent='Enter the six-character code shown below to finish this store test.';
-    const product=document.createElement('p');product.textContent='Selected item: '+p.name;
-    const codeLabel=document.createElement('p');codeLabel.className='store-notice';codeLabel.textContent='YOUR TEMPORARY TEST CODE';
-    const code=document.createElement('div');code.className='store-verification-code';code.textContent=verificationCode;
-    const label=document.createElement('label');label.htmlFor='storeVerificationInput';label.textContent='TYPE THE CODE ABOVE';
-    const input=document.createElement('input');input.id='storeVerificationInput';input.className='store-verification-input';input.type='text';input.maxLength=6;input.autocomplete='off';input.autocapitalize='characters';input.spellcheck=false;input.placeholder='6-CHARACTER CODE';input.setAttribute('aria-label','Enter the six-character test code');
-    const status=document.createElement('p');status.className='online-status';status.setAttribute('aria-live','polite');status.textContent='Waiting for the demo code.';
-    const verify=document.createElement('button');verify.className='primary';verify.textContent='VERIFY & UNLOCK DEMO ITEM';verify.disabled=true;
-    const validate=()=>{
-      const valid=input.value.trim().toUpperCase()===verificationCode;
-      verify.disabled=!valid;
-      status.textContent=valid?'CODE ACCEPTED — READY TO FINISH THE DEMO.':'The code does not match yet.';
-    };
-    input.addEventListener('input',validate);
-    verify.onclick=()=>{
-      if(input.value.trim().toUpperCase()!==verificationCode){status.textContent='INCORRECT CODE — CHECK IT AND TRY AGAIN.';verify.disabled=true;return}
-      applyProduct(p);
-      say('DEMO VERIFICATION COMPLETE — '+p.name+' UNLOCKED. NO PAYMENT WAS MADE.');
-      renderStore();
-    };
-    const back=document.createElement('button');back.textContent='BACK';
-    back.onclick=()=>openFakePixCheckout(p);
-    card.append(tag,title,desc,product,codeLabel,code,label,input,status,verify,back);$('items').append(card);
-    const note=document.createElement('p');note.className='store-notice';
-    note.textContent='TEST ONLY: this code checks the local demo screen. It does not verify your identity, create a Pix transfer, or charge money. Do not enter personal or bank details.';
-    $('items').append(note);show('shop');input.focus();
-  }
-  renderStore();
+$('shopTitle').textContent='PURCHASE · STEP 3 OF 7';$('items').innerHTML='';
+const card=document.createElement('article');card.className='item store-item pix-demo';
+const title=document.createElement('h3');title.textContent='REVIEW YOUR ITEM';
+const desc=document.createElement('p');desc.textContent=p.name+' — '+p.desc;
+const price=document.createElement('div');price.className='price';price.textContent=p.price+' · FICTIONAL VALUE';
+const next=document.createElement('button');next.className='primary';next.textContent='STEP 4 · CONFIRM ITEM';next.onclick=()=>openFakePixConfirm(p);
+const cancel=document.createElement('button');cancel.textContent='CANCEL';cancel.onclick=renderStore;
+card.append(title,desc,price,next,cancel);$('items').append(card);show('shop');
+}
+function openFakePixConfirm(p){
+$('shopTitle').textContent='PURCHASE · STEP 4 OF 7';$('items').innerHTML='';
+const card=document.createElement('article');card.className='item store-item pix-demo';
+const title=document.createElement('h3');title.textContent='FIRST CONFIRMATION';
+const text=document.createElement('p');text.textContent='Confirm item: '+p.name+' ('+p.price+'). Demo only.';
+const next=document.createElement('button');next.className='primary';next.textContent='STEP 5 · VERIFY';next.onclick=()=>openFakePixVerification(p);
+const cancel=document.createElement('button');cancel.textContent='CANCEL';cancel.onclick=renderStore;
+card.append(title,text,next,cancel);$('items').append(card);show('shop');
+}
+function openFakePixVerification(p){
+$('shopTitle').textContent='PURCHASE · STEP 5 OF 7';$('items').innerHTML='';
+const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const codeValue=Array.from({length:6},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+const card=document.createElement('article');card.className='item store-item pix-demo';
+const title=document.createElement('h3');title.textContent='DEMO VERIFICATION';
+const desc=document.createElement('p');desc.textContent='Type the temporary code to continue. No payment or personal details.';
+const item=document.createElement('p');item.textContent=p.name+' · '+p.price;
+const code=document.createElement('div');code.className='store-verification-code';code.textContent=codeValue;
+const input=document.createElement('input');input.id='storeVerificationInput';input.className='store-verification-input';input.maxLength=6;input.autocomplete='off';input.placeholder='6-CHARACTER CODE';
+const status=document.createElement('p');status.className='online-status';status.textContent='Waiting for code.';
+const verify=document.createElement('button');verify.className='primary';verify.textContent='STEP 6 · CHECK CODE';verify.disabled=true;
+input.addEventListener('input',()=>{const ok=input.value.trim().toUpperCase()===codeValue;verify.disabled=!ok;status.textContent=ok?'CODE MATCHED — CONTINUE':'Code does not match.'});
+verify.onclick=()=>{if(input.value.trim().toUpperCase()===codeValue)openFakePixFinalConfirm(p)};
+const back=document.createElement('button');back.textContent='BACK';back.onclick=()=>openFakePixConfirm(p);
+card.append(title,desc,item,code,input,status,verify,back);$('items').append(card);show('shop');input.focus();
+}
+function openFakePixFinalConfirm(p){
+$('shopTitle').textContent='PURCHASE · STEP 7 OF 7';$('items').innerHTML='';
+const card=document.createElement('article');card.className='item store-item pix-demo';
+const title=document.createElement('h3');title.textContent='FINAL CONFIRMATION';
+const desc=document.createElement('p');desc.textContent='Unlock '+p.name+' as a demo item? No money is charged.';
+const final=document.createElement('button');final.className='primary';final.textContent='FINAL CONFIRM · UNLOCK';final.onclick=()=>{applyProduct(p);say('DEMO ITEM UNLOCKED — NO PAYMENT MADE.');renderStore()};
+const cancel=document.createElement('button');cancel.textContent='CANCEL';cancel.onclick=renderStore;
+card.append(title,desc,final,cancel);$('items').append(card);show('shop');
+}  renderStore();
 }
 $('realStore').onclick=openRealStore;
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('selected',x===b));say('SELECTED OPERATION: '+mode)});
