@@ -339,6 +339,23 @@ $('copyRoomCode').onclick=()=>{if(!roomCodeValue)return;if(navigator.clipboard&&
 const guns=[{name:'PISTOL',cost:0,damage:25,clip:12,rate:330},{name:'AK-47',cost:650,damage:22,clip:30,rate:125},{name:'DESERT EAGLE',cost:900,damage:60,clip:7,rate:470},{name:'MACHINE GUN',cost:1600,damage:18,clip:100,rate:45}];
 const vests=[{name:'LIGHT VEST',cost:300,protection:15},{name:'REINFORCED VEST',cost:700,protection:30},{name:'HEAVY ARMOR',cost:1200,protection:50}];
 let owned=['PISTOL'];
+let storeOwned=[];
+let equippedSkin={weapon:'DEFAULT',armor:'DEFAULT'};
+const SAVE_KEY='ironfront-save-v1';
+function loadProgress(){
+  try{const data=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
+    if(Number.isFinite(data.coins))coins=Math.max(0,data.coins);
+    if(Array.isArray(data.owned))owned=[...new Set(['PISTOL',...data.owned])];
+    if(Array.isArray(data.storeOwned))storeOwned=[...new Set(data.storeOwned)];
+    if(data.equippedSkin&&typeof data.equippedSkin==='object')equippedSkin={...equippedSkin,...data.equippedSkin};
+    if(Number.isFinite(data.armor))armor=data.armor;
+    if(typeof data.weapon==='string'&&owned.includes(data.weapon))weapon=data.weapon;
+  }catch(e){}
+}
+function saveProgress(){
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify({coins,owned,storeOwned,equippedSkin,armor,weapon}))}catch(e){}
+}
+loadProgress();
 function buildMap(layout){
   const size=24;
   const g=Array.from({length:size},(_,y)=>Array.from({length:size},(_,x)=>(x===0||y===0||x===size-1||y===size-1)?'1':'0'));
@@ -477,10 +494,41 @@ function blocked(x1,y1,x2,y2){let d=Math.hypot(x2-x1,y2-y1),n=Math.ceil(d*12);fo
 function openShop(type){$('shopTitle').textContent=type==='WEAPON'?'WEAPON ARMORY':'ARMOR SHOP';let arr=type==='WEAPON'?guns:vests;$('items').innerHTML='';arr.forEach(it=>{let el=document.createElement('article');el.className='item';let desc=type==='WEAPON'?it.damage+' damage · '+it.clip+' round magazine · 100% durability':'Damage reduction: '+it.protection+'%';let has=type==='WEAPON'?owned.includes(it.name):armor===it.protection;el.innerHTML='<h3>'+it.name+'</h3><p>'+desc+'</p><div class="price">'+(it.cost===0?'FREE':it.cost+' CREDITS')+'</div>';let b=document.createElement('button');b.textContent=has?'EQUIPPED':type==='WEAPON'?'BUY / EQUIP':'BUY / EQUIP';b.onclick=()=>{if(has){say('Already equipped.');return}if(coins<it.cost){say('NOT ENOUGH CREDITS');return}coins-=it.cost;if(type==='WEAPON'){owned.push(it.name);weapon=it.name;ammo=it.clip;reserve=it.clip*3}else armor=it.protection;hud();say(it.name+' EQUIPPED');openShop(type)};el.append(b);$('items').append(el)});show('shop');hud()}
 $('weapons').onclick=()=>openShop('WEAPON');$('armor').onclick=()=>openShop('ARMOR');$('back').onclick=()=>show('menu');
 function openRealStore(){
-  $('shopTitle').textContent='REAL-MONEY STORE (BRL)'; $('items').innerHTML='';
-  const products=[['Credits Pack - Small','1,000 game credits','BRL 4.90','Credits'],['Credits Pack - Medium','5,000 game credits','BRL 19.90','Credits'],['Credits Pack - Large','12,000 game credits','BRL 39.90','Credits'],['Weapon Skin - Aurora','Cosmetic weapon appearance','BRL 7.90','Cosmetic'],['Weapon Skin - Carbon','Cosmetic weapon appearance','BRL 9.90','Cosmetic'],['Armor Skin - Ranger','Cosmetic armor appearance','BRL 9.90','Cosmetic'],['Armor Skin - Gold','Cosmetic armor appearance','BRL 14.90','Cosmetic'],['Weapon Bundle - Special','Preview bundle listing','BRL 24.90','Demo']];
-  products.forEach(p=>{const card=document.createElement('article');card.className='item store-item';const tag=document.createElement('span');tag.className='store-tag';tag.textContent=p[3];const title=document.createElement('h3');title.textContent=p[0];const desc=document.createElement('p');desc.textContent=p[1];const price=document.createElement('div');price.className='price';price.textContent=p[2];const button=document.createElement('button');button.textContent='PAYMENT NOT CONNECTED';button.disabled=true;card.append(tag,title,desc,price,button);$('items').append(card)});
-  const note=document.createElement('p');note.className='store-notice';note.textContent='PREVIEW ONLY: Checkout is not connected; no payment is collected. A parent or guardian must configure any real purchase provider.';$('items').append(note);show('shop');
+  $('shopTitle').textContent='CREDITS STORE';$('items').innerHTML='';
+  const products=[
+    {name:'Weapon Skin · Aurora',desc:'Unlock the Aurora cosmetic skin.',cost:700,type:'skin',key:'AURORA',slot:'weapon'},
+    {name:'Weapon Skin · Carbon',desc:'Unlock the Carbon cosmetic skin.',cost:900,type:'skin',key:'CARBON',slot:'weapon'},
+    {name:'Armor Skin · Ranger',desc:'Unlock the Ranger cosmetic skin.',cost:850,type:'skin',key:'RANGER',slot:'armor'},
+    {name:'Armor Skin · Gold',desc:'Unlock the Gold cosmetic skin.',cost:1200,type:'skin',key:'GOLD',slot:'armor'},
+    {name:'Starter Credits Bonus',desc:'One-time bonus credits for your profile.',cost:0,type:'bonus',key:'BONUS'}
+  ];
+  products.forEach(p=>{
+    const card=document.createElement('article');card.className='item store-item';
+    const tag=document.createElement('span');tag.className='store-tag';tag.textContent=p.type==='bonus'?'FREE BONUS':'COSMETIC';
+    const title=document.createElement('h3');title.textContent=p.name;
+    const desc=document.createElement('p');desc.textContent=p.desc;
+    const price=document.createElement('div');price.className='price';price.textContent=p.cost===0?'FREE':p.cost+' CREDITS';
+    const button=document.createElement('button');
+    const isOwned=p.type==='bonus'?storeOwned.includes(p.key):storeOwned.includes(p.key);
+    const isEquipped=p.type==='skin'&&equippedSkin[p.slot]===p.key;
+    button.textContent=isOwned?(isEquipped?'EQUIPPED':'OWNED — EQUIP'):'BUY WITH CREDITS';
+    button.disabled=isEquipped;
+    button.onclick=()=>{
+      if(p.type==='bonus'){
+        if(isOwned){say('BONUS ALREADY CLAIMED');return}
+        storeOwned.push(p.key);coins+=500;
+        saveProgress();hud();say('500 BONUS CREDITS ADDED');openRealStore();return;
+      }
+      if(isOwned){equippedSkin[p.slot]=p.key;saveProgress();say(p.name+' EQUIPPED');openRealStore();return}
+      if(coins<p.cost){say('NOT ENOUGH CREDITS — EARN CREDITS IN MATCHES');return}
+      coins-=p.cost;storeOwned.push(p.key);equippedSkin[p.slot]=p.key;
+      saveProgress();hud();say(p.name+' PURCHASED AND EQUIPPED');openRealStore();
+    };
+    card.append(tag,title,desc,price,button);$('items').append(card);
+  });
+  const note=document.createElement('p');note.className='store-notice';
+  note.textContent='IN-GAME STORE ONLY: purchases use earned game credits. Your profile inventory and balance save on this browser. No real-money checkout.';
+  $('items').append(note);show('shop');hud();
 }
 $('realStore').onclick=openRealStore;
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('selected',x===b));say('SELECTED OPERATION: '+mode)});
