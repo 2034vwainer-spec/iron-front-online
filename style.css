@@ -425,3 +425,5 @@ canvas {
 button{background:linear-gradient(180deg,#30434a,#1a2a31);border-color:#52636a;box-shadow:inset 0 1px #ffffff12,0 3px 8px #0004;transition:filter .15s ease,transform .15s ease}
 button:active{transform:translateY(1px);filter:brightness(.92)}
 button.primary{background:linear-gradient(180deg,#e3bd65,#bd8d37);border-color:#e2bd68;box-shadow:inset 0 1px #fff5,0 4px 12px #0005}
+
+.store-tag{display:inline-block;color:#92b5b0;border:1px solid #38534d;padding:4px 7px;border-radius:4px;font-size:9px;letter-spacing:1px;margin-bottom:8px}.store-item button:disabled{opacity:.6;cursor:not-allowed;background:#26312f;color:#9ba7a1;border-color:#46524e}.store-notice{grid-column:1/-1;padding:12px;border:1px solid #655535;border-radius:6px;background:#272317;color:#d8c58d;font-size:11px;line-height:1.6}
