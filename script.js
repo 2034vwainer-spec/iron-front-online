@@ -384,6 +384,18 @@ function saveProgress(){
   try{localStorage.setItem(SAVE_KEY,JSON.stringify({coins,owned,storeOwned,ownedPowers,equippedPower,equippedSkin,equippedStoreTheme,armor,weapon}))}catch(e){}
 }
 loadProgress();
+// One-time reset: restore the original dark-and-gold menu palette after the store theme test.
+try{
+  const originalPaletteResetKey='ironfront-original-palette-reset-v1';
+  if(!localStorage.getItem(originalPaletteResetKey)){
+    equippedStoreTheme='DEFAULT';
+    localStorage.setItem(originalPaletteResetKey,'1');
+    saveProgress();
+  }
+}catch(e){
+  equippedStoreTheme='DEFAULT';
+  saveProgress();
+}
 applyStoreTheme();
 function buildMap(layout){
   const size=24;
