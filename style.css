@@ -15,7 +15,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(ellipse at 50% -20%,#263943 0,#10191f 45%,#080c10 100%);
+  background: radial-gradient(ellipse at 50% -20%,var(--panel) 0,var(--bg) 100%);
   color: var(--text);
   font-family: 'Roboto Mono', monospace;
   padding: 22px;
@@ -61,7 +61,7 @@ body {
 }
 
 .panel {
-  background: linear-gradient(145deg,#172229,#10171c);
+  background: linear-gradient(145deg,var(--panel),var(--bg));
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 24px;
@@ -420,7 +420,7 @@ canvas {
 .turn-setup .online-status{margin:8px 0 0}
 
 /* Subtle material and glass treatment for a more grounded field HUD. */
-.panel{background:linear-gradient(145deg,#1b282d 0%,#111a1f 52%,#0c1318 100%);border-color:#35464c;box-shadow:inset 0 1px #ffffff0b,0 18px 55px #0009}
+.panel{background:linear-gradient(145deg,var(--panel) 0%,var(--bg) 100%);border-color:var(--line);box-shadow:inset 0 1px #ffffff0b,0 18px 55px #0009}
 .gamebar span{padding:7px 9px;background:linear-gradient(180deg,#172329,#0b1216);border:1px solid #314149;border-radius:4px;box-shadow:inset 0 1px #ffffff08}
 button{background:linear-gradient(180deg,#30434a,#1a2a31);border-color:#52636a;box-shadow:inset 0 1px #ffffff12,0 3px 8px #0004;transition:filter .15s ease,transform .15s ease}
 button:active{transform:translateY(1px);filter:brightness(.92)}
