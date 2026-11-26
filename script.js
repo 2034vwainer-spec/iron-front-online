@@ -13,7 +13,7 @@ function setupCanvasResolution(){
 }
 setupCanvasResolution();
 window.addEventListener('resize',setupCanvasResolution,{passive:true});
-let mode='ATTACK',coins=0,level=1,hp=100,armor=0,weapon='PISTOL',ammo=12,reserve=36,playing=false,paused=false,bus=false,last=0,lastShot=0,keys={},enemies=[],enemyBolts=[],player={x:2.5,y:11.5,a:0},baseHp=100,muzzleFlashUntil=0,emptyMessageAt=0,footstepPhase=0,cameraKick=0,shotFx=null,waveBreakUntil=0,reloadUntil=0,mouseHeld=false,adPlaying=false;
+let mode='ATTACK',coins=0,level=1,hp=100,armor=0,weapon='PISTOL',ammo=12,reserve=36,playing=false,paused=false,bus=false,last=0,lastShot=0,keys={},enemies=[],enemyBolts=[],player={x:2.5,y:11.5,a:0},baseHp=100,muzzleFlashUntil=0,emptyMessageAt=0,footstepPhase=0,cameraKick=0,shotFx=null,waveBreakUntil=0,reloadUntil=0,mouseHeld=false,adPlaying=false,waveAdTimer=null,waveAdCountdownTimer=null;
 const ambientMotes=Array.from({length:58},(_,i)=>({
   x:(i*157.31+37)%900,
   y:(i*89.73+21)%520,
@@ -746,8 +746,8 @@ function beginNextWave(){
   if(mode!=='DUEL'&&mode!=='5V5'){showWaveAd();return}
   waveBreakUntil=performance.now()+4500;hud();
 }
-function showWaveAd(){adPlaying=true;waveBreakUntil=0;const overlay=$('waveAd'),video=$('waveAdVideo');overlay.classList.remove('hidden');video.currentTime=0;video.play().catch(()=>endWaveAd());}
-function endWaveAd(){if(!adPlaying)return;adPlaying=false;const overlay=$('waveAd'),video=$('waveAdVideo');video.pause();overlay.classList.add('hidden');waveBreakUntil=performance.now();advanceWave(performance.now());last=performance.now();if(playing&&!paused)requestAnimationFrame(loop);}
+function showWaveAd(){adPlaying=true;waveBreakUntil=0;const overlay=$('waveAd'),video=$('waveAdVideo'),countdown=$('waveAdCountdown');overlay.classList.remove('hidden');video.currentTime=0;video.play().catch(()=>{});let remaining=30;if(countdown)countdown.textContent='AD ENDS IN '+remaining+' SECONDS';waveAdCountdownTimer=setInterval(()=>{if(!adPlaying)return;remaining--;if(countdown)countdown.textContent='AD ENDS IN '+remaining+' SECOND'+(remaining===1?'':'S');if(remaining<=0){clearInterval(waveAdCountdownTimer);waveAdCountdownTimer=null;}},1000);waveAdTimer=setTimeout(endWaveAd,30000);}
+function endWaveAd(){if(!adPlaying)return;adPlaying=false;if(waveAdTimer){clearTimeout(waveAdTimer);waveAdTimer=null;}if(waveAdCountdownTimer){clearInterval(waveAdCountdownTimer);waveAdCountdownTimer=null;}const overlay=$('waveAd'),video=$('waveAdVideo');video.pause();overlay.classList.add('hidden');waveBreakUntil=performance.now();advanceWave(performance.now());last=performance.now();if(playing&&!paused)requestAnimationFrame(loop);}
 function advanceWave(now){
   if(!waveBreakUntil||now<waveBreakUntil)return;
   waveBreakUntil=0;
@@ -1342,5 +1342,5 @@ if(mode==='DUEL'&&onlineReady&&now-lastNetSend>50){sendNet({type:'state',x:playe
 else if(mode==='5V5'&&onlineReady&&now-lastNetSend>50){const me=teamPlayers[myPlayerId];if(me){me.x=player.x;me.y=player.y;me.a=player.a;if(onlineRole==='host')teamBroadcast({type:'teamState',player:me});else sendNet({type:'state',x:player.x,y:player.y,a:player.a})}lastNetSend=now}
 advanceWave(now);render();hud();requestAnimationFrame(loop)}
 hud();
-$('skipWaveAd').onclick=endWaveAd;$('waveAdVideo').onended=endWaveAd;$('waveAdVideo').onerror=endWaveAd;
+$('waveAdVideo').onended=endWaveAd;$('waveAdVideo').onerror=()=>{};
 })();
