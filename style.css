@@ -452,3 +452,8 @@ button.primary{background:linear-gradient(180deg,#e3bd65,#bd8d37);border-color:#
 #game:fullscreen .footnote{display:none;}
 
 .wave-ad{position:fixed;inset:0;z-index:10000;background:rgba(3,7,8,.94);display:flex;align-items:center;justify-content:center;padding:16px}.wave-ad.hidden{display:none!important}.wave-ad-card{width:min(900px,96vw);padding:18px;border:1px solid #68786c;background:#10191b;border-radius:10px;box-shadow:0 24px 70px #000b;text-align:center}.wave-ad-card h2{color:#e0bd69;margin:6px 0 14px}.wave-ad-card video{display:block;width:100%;max-height:70vh;background:#000;border-radius:6px}.wave-ad-card button{margin-top:14px;min-width:160px;padding:12px 20px}
+
+/* Click recovery: hidden overlays must never intercept controls. */
+.hidden, .wave-ad.hidden { display:none!important; pointer-events:none!important; visibility:hidden!important; }
+button, input, canvas { pointer-events:auto!important; }
+#waveAd:not(.hidden), #gameover:not(.hidden) { pointer-events:auto!important; }
