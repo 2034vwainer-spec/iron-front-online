@@ -13,7 +13,7 @@
     <p class="eyebrow">TACTICAL COMBAT SIMULATION</p>
     <h1>IRON <span>FRONT</span></h1>
   </div>
-  <div class="wallet">CREDITS <b id="coins">0</b></div>
+  <div class="wallet"><span class="player-badge">PLAYER <b id="playerLabel">GUEST</b></span> · CREDITS <b id="coins">0</b></div>
 </header>
 
 <section id="menu" class="panel">
@@ -38,6 +38,7 @@
   </div>
 
   <div class="actions">
+    <button id="accountButton">PLAYER ACCOUNT</button>
     <button id="realStore" class="store-launch">PAID STORE · FAKE PIX</button>
     <button id="play" class="primary">DEPLOY →</button>
     <button id="onlinePlay">1V1 ONLINE</button>
@@ -46,6 +47,20 @@
     <button id="armor">ARMOR SHOP</button>
   </div>
   <p class="footnote">WASD move · Mouse aim · Click to fire · R reload · Shift sprint</p>
+</section>
+
+<section id="account" class="panel hidden">
+  <div class="section-head"><div><p class="eyebrow">PLAYER PROFILE</p><h2>CREATE YOUR ACCOUNT</h2></div><button id="accountBack">← BACK</button></div>
+  <div class="account-card">
+    <div id="accountCurrent" class="hidden"><p class="eyebrow">LOCAL PROFILE ACTIVE</p><h3 id="accountCurrentName"></h3><p class="muted">Your profile and game progress are stored in this browser.</p><button id="accountLogout" class="secondary">LOG OUT</button></div>
+    <form id="accountForm">
+      <label for="accountUsername">PLAYER NAME</label>
+      <input id="accountUsername" maxlength="20" autocomplete="nickname" placeholder="Choose a player name" required>
+      <p class="muted">Use a nickname only — don't enter your real name, email, or password.</p>
+      <button id="accountCreate" class="primary" type="submit">CREATE / SAVE PROFILE</button>
+    </form>
+    <p id="accountStatus" class="online-status" aria-live="polite">PROFILE IS STORED ON THIS DEVICE ONLY.</p>
+  </div>
 </section>
 
 <section id="online" class="panel hidden">
