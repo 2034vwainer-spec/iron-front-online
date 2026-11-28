@@ -368,6 +368,19 @@ function applyStoreTheme(){
   root.style.setProperty('--panel',theme.panel);
   root.style.setProperty('--bg',theme.bg);
 }
+
+// Simple local nickname profile. This is not online authentication and does not collect credentials.
+const PROFILE_KEY='ironfront-local-profile-v1';
+let localProfile=null;
+function readLocalProfile(){try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'null');if(p&&typeof p.name==='string')localProfile=p}catch(e){localProfile=null}updatePlayerBadge()}
+function updatePlayerBadge(){const label=$('playerLabel');if(label)label.textContent=localProfile?localProfile.name.toUpperCase():'GUEST'}
+function refreshAccountScreen(){const current=$('accountCurrent'),form=$('accountForm'),logout=$('accountLogout'),status=$('accountStatus');if(localProfile){current.classList.remove('hidden');$('accountCurrentName').textContent=localProfile.name;form.querySelector('#accountUsername').value=localProfile.name;logout.classList.remove('hidden');status.textContent='PROFILE SAVED ON THIS DEVICE.'}else{current.classList.add('hidden');form.querySelector('#accountUsername').value='';logout.classList.add('hidden');status.textContent='CREATE A LOCAL PROFILE. NO EMAIL OR PASSWORD NEEDED.'}}
+$('accountButton').onclick=()=>{refreshAccountScreen();show('account')};
+$('accountBack').onclick=()=>show('menu');
+$('accountForm').addEventListener('submit',e=>{e.preventDefault();const name=$('accountUsername').value.trim().replace(/\\s+/g,' ');if(name.length<3||name.length>20||!/^[\\p{L}\\p{N} _-]+$/u.test(name)){$('accountStatus').textContent='USE 3–20 CHARACTERS: LETTERS, NUMBERS, SPACE, _ OR -.';return}localProfile={name};try{localStorage.setItem(PROFILE_KEY,JSON.stringify(localProfile));updatePlayerBadge();refreshAccountScreen();$('accountStatus').textContent='PROFILE CREATED — WELCOME, '+name.toUpperCase()+'!'}catch(err){$('accountStatus').textContent='COULD NOT SAVE PROFILE IN THIS BROWSER.'}});
+$('accountLogout').onclick=()=>{localProfile=null;try{localStorage.removeItem(PROFILE_KEY)}catch(e){}updatePlayerBadge();refreshAccountScreen();$('accountStatus').textContent='SIGNED OUT. YOUR LOCAL GAME SAVE IS UNCHANGED.'};
+readLocalProfile();
+
 const SAVE_KEY='ironfront-save-v1';
 function loadProgress(){
   try{const data=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
@@ -504,7 +517,7 @@ function activateEquippedPower(){
   else if(equippedPower==='RAPID')say('RAPID CHARGE ACTIVE — HOLD FIRE TO REPEAT');
   else say('NO POWER EQUIPPED');
 }
-function show(id){['menu','online','shop','game','bus','gameover'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='gameover'){$('gameover').classList.remove('hidden');$('gameover').scrollIntoView({block:'center',behavior:'instant'})}}
+function show(id){['menu','account','online','shop','game','bus','gameover'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='gameover'){$('gameover').classList.remove('hidden');$('gameover').scrollIntoView({block:'center',behavior:'instant'})}}
 function say(s){$('message').textContent=s}
 function hud(){
   $('coins').textContent=coins;$('gameCoins').textContent=coins;$('level').textContent=level;
