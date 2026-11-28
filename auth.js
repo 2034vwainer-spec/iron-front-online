@@ -162,24 +162,7 @@
     }
 
     if (!client) {
-      if (!passesMinimumAge($('birthMonth').value, $('birthYear').value)) {
-        setStatus('CHECK THE BIRTH MONTH AND YEAR.', true);
-        return;
-      }
-      setBusy(true);
-      setStatus('CREATING OFFLINE PLAYER PROFILE…', false);
-      try {
-        try { localStorage.setItem('ironfront-offline-player-v1', name); } catch (storageError) {}
-        $('authSignupForm').reset();
-        const guest = {
-          id: 'offline-' + name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16),
-          user_metadata: { player_name: name },
-          offline: true
-        };
-        setAuthenticatedUser(guest);
-      } finally {
-        setBusy(false);
-      }
+      setStatus('EMAIL AND PASSWORD ACCOUNTS ARE NOT CONNECTED YET. USE THE SEPARATE OFFLINE PROFILE OPTION, OR CONNECT THE AUTH PROVIDER.', true);
       return;
     }
 
@@ -335,18 +318,16 @@
     config.publishableKey.trim().length > 20 &&
     !/YOUR_|PLACEHOLDER/i.test(config.publishableKey);
   if (!validUrl || !validKey) {
-    // Use a clearly labeled, device-local profile when no online auth provider is configured.
-    const emailLabel = document.querySelector('label[for="signupEmail"]');
-    if (emailLabel) emailLabel.classList.add('hidden');
-    $('signupEmail').classList.add('hidden');
-    $('signupEmail').required = false;
-    const passwordRow = $('signupPassword').parentElement.parentElement;
-    if (passwordRow) passwordRow.classList.add('hidden');
-    $('signupPassword').required = false;
-    $('signupConfirm').required = false;
-    $('signupSubmit').innerHTML = 'CREATE OFFLINE PLAYER PROFILE <span>→</span>';
-    $('authSubheading').textContent = 'Create a profile saved only on this device. Online accounts are not connected yet.';
-    $('guestAccessForm').classList.add('hidden');
+    // Keep email/password fields visible, but never pretend an online account can be created offline.
+    $('signupEmail').classList.remove('hidden');
+    $('signupEmail').required = true;
+    $('signupPassword').classList.remove('hidden');
+    $('signupPassword').required = true;
+    $('signupConfirm').classList.remove('hidden');
+    $('signupConfirm').required = true;
+    $('signupSubmit').innerHTML = 'CREATE PLAYER ACCOUNT <span>→</span>';
+    $('authSubheading').textContent = 'Email and password registration needs the online account service. You can use the separate offline profile option below.';
+    $('guestAccessForm').classList.remove('hidden');
     const savedName = (() => { try { return localStorage.getItem('ironfront-offline-player-v1') || ''; } catch (e) { return ''; } })();
     if (savedName) {
       const returningPlayer = {
