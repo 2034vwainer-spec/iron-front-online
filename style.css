@@ -457,3 +457,16 @@ button.primary{background:linear-gradient(180deg,#e3bd65,#bd8d37);border-color:#
 .hidden, .wave-ad.hidden { display:none!important; pointer-events:none!important; visibility:hidden!important; }
 button, input, canvas { pointer-events:auto!important; }
 #waveAd:not(.hidden), #gameover:not(.hidden) { pointer-events:auto!important; }
+
+/* Local player profile screen */
+.player-badge{display:inline-block;margin-right:10px;color:#9ba8a9;font-size:10px;letter-spacing:1px}
+.player-badge b{color:var(--gold);font-size:12px;margin-left:5px}
+.account-card{max-width:520px;margin:18px auto;padding:22px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(145deg,#17232a,#0a1115);box-shadow:inset 0 1px #ffffff0a}
+.account-card label{display:block;margin:6px 0 8px;color:var(--gold);font-size:10px;letter-spacing:2px;font-weight:700}
+.account-card input{width:100%;padding:13px;background:#080f12;border:1px solid #3a4b53;border-radius:5px;color:var(--text);font:13px 'Roboto Mono',monospace}
+.account-card .primary{width:100%;margin-top:12px}
+.account-card h3{font:800 28px 'Barlow Condensed',sans-serif;color:var(--gold);margin:6px 0 14px}
+.account-card .secondary{margin-top:10px}
+#accountCurrent{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+#accountCurrent.hidden{display:none!important}
+@media(max-width:560px){.account-card{padding:16px}.wallet{display:flex;flex-direction:column;gap:4px;align-items:flex-end}}
