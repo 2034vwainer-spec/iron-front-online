@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IRON FRONT</title>
-<link rel="stylesheet" href="style.css?v=click-diagnostic-20261125-3">
+<link rel="stylesheet" href="style.css?v=account-isolated-20261127-1">
 </head>
 <body>
 <main class="shell">
@@ -211,6 +211,68 @@ window.addEventListener('error',function(e){var m=document.getElementById('messa
 window.addEventListener('unhandledrejection',function(e){var m=document.getElementById('message');if(m)m.textContent='GAME ERROR: '+(e.reason&&e.reason.message||e.reason||'operation failed');});
 document.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&!b.disabled){b.style.outline='2px solid #d5a847';setTimeout(function(){b.style.outline='';},350);}},true);
 </script>
-<script src="script.js?v=click-diagnostic-20261125-3"></script>
+<script src="script.js?v=account-isolated-20261127-1"></script>
+<script>
+/* Independent local player profile UI. Kept separate from the game controller. */
+(function(){
+  const $ = id => document.getElementById(id);
+  const PROFILE_KEY = 'ironfront-local-profile-v1';
+  let profile = null;
+  function setScreen(id) {
+    ['menu','account','online','shop','game','bus','gameover'].forEach(name => {
+      const panel = $(name);
+      if (panel) panel.classList.toggle('hidden', name !== id);
+    });
+  }
+  function updateBadge() {
+    const badge = $('playerLabel');
+    if (badge) badge.textContent = profile ? profile.name.toUpperCase() : 'GUEST';
+  }
+  function refresh() {
+    $('accountCurrent').classList.toggle('hidden', !profile);
+    $('accountForm').classList.toggle('hidden', !!profile);
+    $('accountCurrentName').textContent = profile ? profile.name : '';
+    $('accountStatus').textContent = profile
+      ? 'PROFILE SAVED ON THIS DEVICE.'
+      : 'CREATE A LOCAL PLAYER PROFILE. NO EMAIL OR PASSWORD REQUIRED.';
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
+    if (saved && typeof saved.name === 'string') profile = saved;
+  } catch (e) { profile = null; }
+  updateBadge();
+
+  $('accountButton').addEventListener('click', function() {
+    refresh();
+    setScreen('account');
+  });
+  $('accountBack').addEventListener('click', function() {
+    setScreen('menu');
+  });
+  $('accountForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const name = $('accountUsername').value.trim().replace(/\s+/g, ' ');
+    if (name.length < 3 || name.length > 20) {
+      $('accountStatus').textContent = 'PLAYER NAME MUST HAVE 3 TO 20 CHARACTERS.';
+      return;
+    }
+    try {
+      profile = { name: name };
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      updateBadge();
+      refresh();
+      $('accountStatus').textContent = 'PROFILE CREATED — WELCOME, ' + name.toUpperCase() + '!';
+    } catch (e) {
+      $('accountStatus').textContent = 'COULD NOT SAVE PROFILE IN THIS BROWSER.';
+    }
+  });
+  $('accountLogout').addEventListener('click', function() {
+    profile = null;
+    try { localStorage.removeItem(PROFILE_KEY); } catch (e) {}
+    updateBadge();
+    refresh();
+  });
+})();
+</script>
 </body>
 </html>
