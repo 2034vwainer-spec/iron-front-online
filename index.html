@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IRON FRONT</title>
-<link rel="stylesheet" href="style.css?v=login-gate-20261127-1">
+<link rel="stylesheet" href="style.css?v=login-required-20261128-2">
 </head>
 <body>
 <main class="shell">
@@ -237,8 +237,9 @@ window.addEventListener('error',function(e){var m=document.getElementById('messa
 window.addEventListener('unhandledrejection',function(e){var m=document.getElementById('message');if(m)m.textContent='GAME ERROR: '+(e.reason&&e.reason.message||e.reason||'operation failed');});
 document.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&!b.disabled){b.style.outline='2px solid #d5a847';setTimeout(function(){b.style.outline='';},350);}},true);
 </script>
-<script src="script.js?v=login-gate-20261127-1"></script>
+<script src="script.js?v=login-required-20261128-2"></script>
 <script>
+window.ironFrontLoginComplete = false;
 /* Independent local player profile UI. Kept separate from the game controller. */
 (function(){
   const $ = id => document.getElementById(id);
@@ -246,6 +247,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
   let profile = null;
   let selectedAvatar = '🪖';
   function setScreen(id) {
+    if (id !== 'login' && !window.ironFrontLoginComplete) id = 'login';
     ['login','menu','account','online','shop','game','bus','gameover'].forEach(name => {
       const panel = $(name);
       if (panel) panel.classList.toggle('hidden', name !== id);
@@ -310,6 +312,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
       $('loginStatus').textContent = 'YOU MUST BE AT LEAST 13 TO CONTINUE.';
       return;
     }
+    window.ironFrontLoginComplete = true;
     $('loginForm').reset();
     $('loginStatus').textContent = 'DEMO ACCESS — NO ACCOUNT DETAILS WERE SAVED.';
     setScreen('menu');
