@@ -470,3 +470,7 @@ button, input, canvas { pointer-events:auto!important; }
 #accountCurrent{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 #accountCurrent.hidden{display:none!important}
 @media(max-width:560px){.account-card{padding:16px}.wallet{display:flex;flex-direction:column;gap:4px;align-items:flex-end}}
+
+
+/* Quick account/profile controls */
+.account-avatar{font-size:54px;margin:8px 0 18px}.avatar-picker{display:flex;gap:10px;margin:10px 0 18px}.avatar-choice{font-size:26px;min-width:58px;padding:8px;border:1px solid var(--line);background:#0c1418;border-radius:8px}.avatar-choice.selected{border-color:var(--gold);box-shadow:0 0 0 2px #d5a84744}.remember-row{display:flex;align-items:center;gap:8px;margin:14px 0;color:var(--muted);font-size:11px}.remember-row input{width:auto;margin:0}
