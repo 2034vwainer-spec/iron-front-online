@@ -9,6 +9,7 @@
   const config = window.IRON_FRONT_AUTH_CONFIG || {};
   let client = null;
   let busy = false;
+  let passwordRecoveryFlow = false;
   const MINIMUM_AGE = 13;
 
   function setStatus(message, isError) {
@@ -311,6 +312,7 @@
     });
     client.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
+        passwordRecoveryFlow = true;
         window.ironFrontLoginComplete = false;
         if (typeof window.ironFrontSetScreen === 'function') window.ironFrontSetScreen('login');
         switchForm('update');
@@ -321,9 +323,10 @@
         setAuthenticatedUser(null);
         return;
       }
-      if (session && session.user) setAuthenticatedUser(session.user);
+      if (session && session.user && !passwordRecoveryFlow) setAuthenticatedUser(session.user);
     });
     client.auth.getSession().then(({ data, error }) => {
+      if (passwordRecoveryFlow) return;
       if (error) {
         setStatus('COULD NOT RESTORE YOUR ACCOUNT SESSION. SIGN IN AGAIN.', true);
         setAuthenticatedUser(null);
