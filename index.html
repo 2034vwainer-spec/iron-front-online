@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IRON FRONT</title>
-<link rel="stylesheet" href="style.css?v=account-isolated-20261127-1">
+<link rel="stylesheet" href="style.css?v=login-gate-20261127-1">
 </head>
 <body>
 <main class="shell">
@@ -16,7 +16,25 @@
   <div class="wallet"><span class="player-badge">PLAYER <b id="playerLabel">GUEST</b></span> · CREDITS <b id="coins">0</b></div>
 </header>
 
-<section id="menu" class="panel">
+<section id="login" class="panel login-panel">
+  <div class="login-brand"><p class="eyebrow">IRON FRONT / PLAYER ACCESS</p><h2>WELCOME <span>BACK</span></h2><p class="muted">Sign in to continue to the main menu.</p></div>
+  <form id="loginForm" class="login-card">
+    <label for="loginEmail">EMAIL</label>
+    <input id="loginEmail" type="email" maxlength="120" autocomplete="off" placeholder="demo@example.com" required>
+    <label for="loginPassword">PASSWORD</label>
+    <input id="loginPassword" type="password" minlength="4" maxlength="80" autocomplete="off" placeholder="Demo password" required>
+    <button id="forgotPassword" class="forgot-button" type="button">FORGOT PASSWORD?</button>
+    <div class="birth-fields">
+      <div><label for="birthMonth">BIRTH MONTH</label><select id="birthMonth" required><option value="">Select month</option></select></div>
+      <div><label for="birthYear">BIRTH YEAR</label><select id="birthYear" required><option value="">Select year</option></select></div>
+    </div>
+    <p class="demo-warning">DEMO ONLY: this page is not connected to a secure account server. Do not enter your real email, password, or birth details. Use test values. Nothing entered here is saved or sent.</p>
+    <button id="loginSubmit" class="primary login-submit" type="submit">CONTINUE TO IRON FRONT →</button>
+    <p id="loginStatus" class="online-status" aria-live="polite">DEMO LOGIN — TEST VALUES ONLY.</p>
+  </form>
+</section>
+
+<section id="menu" class="panel hidden">
   <div class="hero">
     <div>
       <p class="eyebrow">WELCOME, SOLDIER</p>
@@ -219,7 +237,7 @@ window.addEventListener('error',function(e){var m=document.getElementById('messa
 window.addEventListener('unhandledrejection',function(e){var m=document.getElementById('message');if(m)m.textContent='GAME ERROR: '+(e.reason&&e.reason.message||e.reason||'operation failed');});
 document.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&!b.disabled){b.style.outline='2px solid #d5a847';setTimeout(function(){b.style.outline='';},350);}},true);
 </script>
-<script src="script.js?v=account-isolated-20261127-1"></script>
+<script src="script.js?v=login-gate-20261127-1"></script>
 <script>
 /* Independent local player profile UI. Kept separate from the game controller. */
 (function(){
@@ -228,7 +246,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
   let profile = null;
   let selectedAvatar = '🪖';
   function setScreen(id) {
-    ['menu','account','online','shop','game','bus','gameover'].forEach(name => {
+    ['login','menu','account','online','shop','game','bus','gameover'].forEach(name => {
       const panel = $(name);
       if (panel) panel.classList.toggle('hidden', name !== id);
     });
@@ -261,6 +279,44 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
     });
   });
   updateBadge();
+
+  /* Demo-only first-entry gate: inputs are checked in memory and immediately discarded. */
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  monthNames.forEach((name, index) => {
+    const option = document.createElement('option');
+    option.value = String(index + 1);
+    option.textContent = name;
+    $('birthMonth').appendChild(option);
+  });
+  const currentYear = new Date().getFullYear();
+  for (let year = currentYear; year >= 1900; year--) {
+    const option = document.createElement('option');
+    option.value = String(year);
+    option.textContent = String(year);
+    $('birthYear').appendChild(option);
+  }
+  $('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const month = Number($('birthMonth').value);
+    const year = Number($('birthYear').value);
+    const now = new Date();
+    if (!month || !year || year > currentYear || (year === currentYear && month > now.getMonth() + 1)) {
+      $('loginStatus').textContent = 'CHECK THE BIRTH MONTH AND YEAR.';
+      return;
+    }
+    let age = currentYear - year;
+    if (month > now.getMonth() + 1) age--;
+    if (age < 13) {
+      $('loginStatus').textContent = 'YOU MUST BE AT LEAST 13 TO CONTINUE.';
+      return;
+    }
+    $('loginForm').reset();
+    $('loginStatus').textContent = 'DEMO ACCESS — NO ACCOUNT DETAILS WERE SAVED.';
+    setScreen('menu');
+  });
+  $('forgotPassword').addEventListener('click', function() {
+    $('loginStatus').textContent = 'PASSWORD RESET IS NOT AVAILABLE IN DEMO MODE. A SECURE ACCOUNT SERVER MUST BE CONNECTED FIRST.';
+  });
 
   $('accountButton').addEventListener('click', function() {
     refresh();
