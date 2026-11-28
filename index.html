@@ -29,11 +29,11 @@
     </aside>
     <div class="auth-main">
       <p class="eyebrow">WELCOME TO IRON FRONT</p>
-      <h2 id="authHeading">SIGN IN</h2>
-      <p id="authSubheading" class="muted">Enter your account details to continue.</p>
+      <h2 id="authHeading">CREATE ACCOUNT</h2>
+      <p id="authSubheading" class="muted">Create a player identity to access the game.</p>
       <div class="auth-tabs" role="tablist" aria-label="Account options">
-        <button id="authLoginTab" class="auth-tab selected" type="button" aria-selected="true">SIGN IN</button>
-        <button id="authSignupTab" class="auth-tab" type="button" aria-selected="false">CREATE ACCOUNT</button>
+        <button id="authLoginTab" class="auth-tab" type="button" aria-selected="false">SIGN IN</button>
+        <button id="authSignupTab" class="auth-tab selected" type="button" aria-selected="true">CREATE ACCOUNT</button>
       </div>
 
       <form id="authLoginForm" class="auth-form">
@@ -45,7 +45,7 @@
         <button id="loginSubmit" class="primary auth-submit" type="submit">SIGN IN TO IRON FRONT <span>→</span></button>
       </form>
 
-      <form id="authSignupForm" class="auth-form hidden">
+      <form id="authSignupForm" class="auth-form">
         <label for="signupName">PLAYER NAME</label>
         <input id="signupName" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="Choose a player name" required>
         <label for="signupEmail">EMAIL ADDRESS</label>
