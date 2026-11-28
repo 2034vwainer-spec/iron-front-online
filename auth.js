@@ -262,6 +262,19 @@
     setStatus('SIGNED OUT. SIGN IN TO ACCESS THE GAME.', false);
   };
 
+  $('guestAccessForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const name = $('guestPlayerName').value.trim().replace(/\\s+/g, ' ');
+    if (name.length < 3 || name.length > 20) {
+      setStatus('PLAYER NAME MUST HAVE 3 TO 20 CHARACTERS.', true);
+      return;
+    }
+    try { localStorage.setItem('ironfront-offline-player-v1', name); } catch (e) {}
+    const guest = { id: 'offline-' + name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16), user_metadata: { player_name: name }, offline: true };
+    setAuthenticatedUser(guest);
+    setStatus('OFFLINE GUEST MODE — ONLINE ACCOUNT NOT CONNECTED.', false);
+  });
+
   $('authLoginTab').addEventListener('click', () => {
     switchForm('login');
     setStatus('SIGN IN WITH YOUR VERIFIED PLAYER ACCOUNT.', false);
