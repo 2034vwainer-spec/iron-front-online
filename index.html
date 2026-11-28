@@ -52,12 +52,20 @@
 <section id="account" class="panel hidden">
   <div class="section-head"><div><p class="eyebrow">PLAYER PROFILE</p><h2>CREATE YOUR ACCOUNT</h2></div><button id="accountBack">← BACK</button></div>
   <div class="account-card">
-    <div id="accountCurrent" class="hidden"><p class="eyebrow">LOCAL PROFILE ACTIVE</p><h3 id="accountCurrentName"></h3><p class="muted">Your profile and game progress are stored in this browser.</p><button id="accountLogout" class="secondary">LOG OUT</button></div>
+    <div id="accountCurrent" class="hidden"><p class="eyebrow">LOCAL PROFILE ACTIVE</p><h3 id="accountCurrentName"></h3><p id="accountAvatar" class="account-avatar">🪖</p><p class="muted">Your profile and game progress are stored in this browser.</p><button id="accountLogout" class="secondary">LOG OUT</button></div>
     <form id="accountForm">
       <label for="accountUsername">PLAYER NAME</label>
       <input id="accountUsername" maxlength="20" autocomplete="nickname" placeholder="Choose a player name" required>
-      <p class="muted">Use a nickname only — don't enter your real name, email, or password.</p>
-      <button id="accountCreate" class="primary" type="submit">CREATE / SAVE PROFILE</button>
+      <label>CHOOSE AVATAR</label>
+      <div class="avatar-picker" role="group" aria-label="Choose avatar">
+        <button type="button" class="avatar-choice selected" data-avatar="🪖" aria-pressed="true">🪖</button>
+        <button type="button" class="avatar-choice" data-avatar="🛡️" aria-pressed="false">🛡️</button>
+        <button type="button" class="avatar-choice" data-avatar="🎖️" aria-pressed="false">🎖️</button>
+        <button type="button" class="avatar-choice" data-avatar="👤" aria-pressed="false">👤</button>
+      </div>
+      <label class="remember-row"><input id="rememberProfile" type="checkbox" checked> REMEMBER PROFILE ON THIS DEVICE</label>
+      <p class="muted">Nickname only. No email or password needed; this is a local profile, not online authentication.</p>
+      <button id="accountCreate" class="primary" type="submit">CREATE PROFILE / SIGN IN</button>
     </form>
     <p id="accountStatus" class="online-status" aria-live="polite">PROFILE IS STORED ON THIS DEVICE ONLY.</p>
   </div>
@@ -218,6 +226,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
   const $ = id => document.getElementById(id);
   const PROFILE_KEY = 'ironfront-local-profile-v1';
   let profile = null;
+  let selectedAvatar = '🪖';
   function setScreen(id) {
     ['menu','account','online','shop','game','bus','gameover'].forEach(name => {
       const panel = $(name);
@@ -232,6 +241,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
     $('accountCurrent').classList.toggle('hidden', !profile);
     $('accountForm').classList.toggle('hidden', !!profile);
     $('accountCurrentName').textContent = profile ? profile.name : '';
+    $('accountAvatar').textContent = profile ? (profile.avatar || '🪖') : selectedAvatar;
     $('accountStatus').textContent = profile
       ? 'PROFILE SAVED ON THIS DEVICE.'
       : 'CREATE A LOCAL PLAYER PROFILE. NO EMAIL OR PASSWORD REQUIRED.';
@@ -240,6 +250,16 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
     const saved = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
     if (saved && typeof saved.name === 'string') profile = saved;
   } catch (e) { profile = null; }
+  if (profile && profile.avatar) selectedAvatar = profile.avatar;
+  document.querySelectorAll('.avatar-choice').forEach(btn => {
+    btn.addEventListener('click', function() {
+      selectedAvatar = btn.dataset.avatar || '🪖';
+      document.querySelectorAll('.avatar-choice').forEach(b => {
+        b.classList.toggle('selected', b === btn);
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+    });
+  });
   updateBadge();
 
   $('accountButton').addEventListener('click', function() {
@@ -257,8 +277,9 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
       return;
     }
     try {
-      profile = { name: name };
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      profile = { name: name, avatar: selectedAvatar };
+      if ($('rememberProfile').checked) localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      else localStorage.removeItem(PROFILE_KEY);
       updateBadge();
       refresh();
       $('accountStatus').textContent = 'PROFILE CREATED — WELCOME, ' + name.toUpperCase() + '!';
