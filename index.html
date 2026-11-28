@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IRON FRONT</title>
-<link rel="stylesheet" href="style.css?v=login-required-20261128-2">
+<link rel="stylesheet" href="style.css?v=account-auth-20261128-1">
 </head>
 <body>
 <main class="shell">
@@ -17,21 +17,72 @@
 </header>
 
 <section id="login" class="panel login-panel">
-  <div class="login-brand"><p class="eyebrow">IRON FRONT / PLAYER ACCESS</p><h2>WELCOME <span>BACK</span></h2><p class="muted">Sign in to continue to the main menu.</p></div>
-  <form id="loginForm" class="login-card">
-    <label for="loginEmail">EMAIL</label>
-    <input id="loginEmail" type="email" maxlength="120" autocomplete="off" placeholder="demo@example.com" required>
-    <label for="loginPassword">PASSWORD</label>
-    <input id="loginPassword" type="password" minlength="4" maxlength="80" autocomplete="off" placeholder="Demo password" required>
-    <button id="forgotPassword" class="forgot-button" type="button">FORGOT PASSWORD?</button>
-    <div class="birth-fields">
-      <div><label for="birthMonth">BIRTH MONTH</label><select id="birthMonth" required><option value="">Select month</option></select></div>
-      <div><label for="birthYear">BIRTH YEAR</label><select id="birthYear" required><option value="">Select year</option></select></div>
+  <div class="login-topline"><span>IRON FRONT / ACCOUNT SERVICES</span><span>SECURE PLAYER ACCESS</span></div>
+  <div class="auth-layout">
+    <aside class="auth-aside">
+      <div class="auth-emblem"><span>IF</span><b>01</b></div>
+      <p class="eyebrow">PLAYER IDENTITY SYSTEM</p>
+      <h2>YOUR PROFILE.<br><span>YOUR FRONT.</span></h2>
+      <p class="auth-aside-copy">Sign in to continue to your profile and game lobby.</p>
+      <div class="auth-status-chip"><i></i> ACCOUNT GATE ACTIVE</div>
+      <div class="auth-aside-foot"><span>IRON FRONT</span><span>PLAYER NETWORK / 01</span></div>
+    </aside>
+    <div class="auth-main">
+      <p class="eyebrow">WELCOME TO IRON FRONT</p>
+      <h2 id="authHeading">SIGN IN</h2>
+      <p id="authSubheading" class="muted">Enter your account details to continue.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Account options">
+        <button id="authLoginTab" class="auth-tab selected" type="button" aria-selected="true">SIGN IN</button>
+        <button id="authSignupTab" class="auth-tab" type="button" aria-selected="false">CREATE ACCOUNT</button>
+      </div>
+
+      <form id="authLoginForm" class="auth-form">
+        <label for="loginEmail">EMAIL ADDRESS</label>
+        <input id="loginEmail" type="email" maxlength="120" autocomplete="email" placeholder="you@example.com" required>
+        <label for="loginPassword">PASSWORD</label>
+        <input id="loginPassword" type="password" minlength="8" maxlength="80" autocomplete="current-password" placeholder="Your password" required>
+        <button id="forgotPassword" class="forgot-button" type="button">FORGOT PASSWORD?</button>
+        <button id="loginSubmit" class="primary auth-submit" type="submit">SIGN IN TO IRON FRONT <span>→</span></button>
+      </form>
+
+      <form id="authSignupForm" class="auth-form hidden">
+        <label for="signupName">PLAYER NAME</label>
+        <input id="signupName" type="text" minlength="3" maxlength="20" autocomplete="nickname" placeholder="Choose a player name" required>
+        <label for="signupEmail">EMAIL ADDRESS</label>
+        <input id="signupEmail" type="email" maxlength="120" autocomplete="email" placeholder="you@example.com" required>
+        <div class="auth-two-fields">
+          <div><label for="signupPassword">PASSWORD</label><input id="signupPassword" type="password" minlength="8" maxlength="80" autocomplete="new-password" placeholder="At least 8 characters" required></div>
+          <div><label for="signupConfirm">CONFIRM PASSWORD</label><input id="signupConfirm" type="password" minlength="8" maxlength="80" autocomplete="new-password" placeholder="Repeat password" required></div>
+        </div>
+        <div class="auth-two-fields auth-birth-fields">
+          <div><label for="birthMonth">BIRTH MONTH</label><select id="birthMonth" required><option value="">Select month</option></select></div>
+          <div><label for="birthYear">BIRTH YEAR</label><select id="birthYear" required><option value="">Select year</option></select></div>
+        </div>
+        <p class="auth-privacy-note">Birth month and year are checked in this browser only to confirm the minimum age. They are not saved or sent to the account provider.</p>
+        <button id="signupSubmit" class="primary auth-submit" type="submit">CREATE PLAYER ACCOUNT <span>→</span></button>
+      </form>
+
+      <form id="authResetForm" class="auth-form hidden">
+        <p class="muted">Enter the email connected to your account. We will send a password reset link when the account service is connected.</p>
+        <label for="resetEmail">EMAIL ADDRESS</label>
+        <input id="resetEmail" type="email" maxlength="120" autocomplete="email" placeholder="you@example.com" required>
+        <button class="primary auth-submit" type="submit">SEND RESET LINK <span>→</span></button>
+        <button id="backToLogin" class="auth-text-button" type="button">BACK TO SIGN IN</button>
+      </form>
+
+      <form id="authUpdatePasswordForm" class="auth-form hidden">
+        <p class="muted">Choose a new password for your account.</p>
+        <label for="newPassword">NEW PASSWORD</label>
+        <input id="newPassword" type="password" minlength="8" maxlength="80" autocomplete="new-password" required>
+        <label for="newPasswordConfirm">CONFIRM NEW PASSWORD</label>
+        <input id="newPasswordConfirm" type="password" minlength="8" maxlength="80" autocomplete="new-password" required>
+        <button class="primary auth-submit" type="submit">SAVE NEW PASSWORD <span>→</span></button>
+      </form>
+
+      <p id="loginStatus" class="online-status auth-feedback" aria-live="polite">CHECKING ACCOUNT SERVICE…</p>
+      <div class="auth-footer"><span>ACCOUNT ACCESS REQUIRED</span><span>© IRON FRONT</span></div>
     </div>
-    <p class="demo-warning">DEMO ONLY: this page is not connected to a secure account server. Do not enter your real email, password, or birth details. Use test values. Nothing entered here is saved or sent.</p>
-    <button id="loginSubmit" class="primary login-submit" type="submit">CONTINUE TO IRON FRONT →</button>
-    <p id="loginStatus" class="online-status" aria-live="polite">DEMO LOGIN — TEST VALUES ONLY.</p>
-  </form>
+  </div>
 </section>
 
 <section id="menu" class="panel hidden">
@@ -237,7 +288,7 @@ window.addEventListener('error',function(e){var m=document.getElementById('messa
 window.addEventListener('unhandledrejection',function(e){var m=document.getElementById('message');if(m)m.textContent='GAME ERROR: '+(e.reason&&e.reason.message||e.reason||'operation failed');});
 document.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&!b.disabled){b.style.outline='2px solid #d5a847';setTimeout(function(){b.style.outline='';},350);}},true);
 </script>
-<script src="script.js?v=login-required-20261128-2"></script>
+<script src="script.js?v=account-auth-20261128-1"></script>
 <script>
 window.ironFrontLoginComplete = false;
 /* Independent local player profile UI. Kept separate from the game controller. */
@@ -255,7 +306,9 @@ window.ironFrontLoginComplete = false;
   }
   function updateBadge() {
     const badge = $('playerLabel');
-    if (badge) badge.textContent = profile ? profile.name.toUpperCase() : 'GUEST';
+    const authUser = window.ironFrontAuthUser;
+    const authName = authUser && authUser.user_metadata && authUser.user_metadata.player_name;
+    if (badge) badge.textContent = authName || (profile ? profile.name.toUpperCase() : (authUser && authUser.email ? authUser.email.split('@')[0].toUpperCase() : 'GUEST'));
   }
   function refresh() {
     $('accountCurrent').classList.toggle('hidden', !profile);
@@ -282,44 +335,8 @@ window.ironFrontLoginComplete = false;
   });
   updateBadge();
 
-  /* Demo-only first-entry gate: inputs are checked in memory and immediately discarded. */
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  monthNames.forEach((name, index) => {
-    const option = document.createElement('option');
-    option.value = String(index + 1);
-    option.textContent = name;
-    $('birthMonth').appendChild(option);
-  });
-  const currentYear = new Date().getFullYear();
-  for (let year = currentYear; year >= 1900; year--) {
-    const option = document.createElement('option');
-    option.value = String(year);
-    option.textContent = String(year);
-    $('birthYear').appendChild(option);
-  }
-  $('loginForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    const month = Number($('birthMonth').value);
-    const year = Number($('birthYear').value);
-    const now = new Date();
-    if (!month || !year || year > currentYear || (year === currentYear && month > now.getMonth() + 1)) {
-      $('loginStatus').textContent = 'CHECK THE BIRTH MONTH AND YEAR.';
-      return;
-    }
-    let age = currentYear - year;
-    if (month > now.getMonth() + 1) age--;
-    if (age < 13) {
-      $('loginStatus').textContent = 'YOU MUST BE AT LEAST 13 TO CONTINUE.';
-      return;
-    }
-    window.ironFrontLoginComplete = true;
-    $('loginForm').reset();
-    $('loginStatus').textContent = 'DEMO ACCESS — NO ACCOUNT DETAILS WERE SAVED.';
-    setScreen('menu');
-  });
-  $('forgotPassword').addEventListener('click', function() {
-    $('loginStatus').textContent = 'PASSWORD RESET IS NOT AVAILABLE IN DEMO MODE. A SECURE ACCOUNT SERVER MUST BE CONNECTED FIRST.';
-  });
+  window.ironFrontSetScreen = setScreen;
+  window.ironFrontUpdatePlayerBadge = updateBadge;
 
   $('accountButton').addEventListener('click', function() {
     refresh();
@@ -351,8 +368,12 @@ window.ironFrontLoginComplete = false;
     try { localStorage.removeItem(PROFILE_KEY); } catch (e) {}
     updateBadge();
     refresh();
+    if (window.ironFrontSignOut) window.ironFrontSignOut();
   });
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-config.js?v=1"></script>
+<script src="auth.js?v=1"></script>
 </body>
 </html>
