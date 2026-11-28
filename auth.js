@@ -285,7 +285,7 @@
   $('authUpdatePasswordForm').addEventListener('submit', updatePassword);
 
   fillBirthOptions();
-  switchForm('login');
+  switchForm('signup');
   window.ironFrontLoginComplete = false;
   if (typeof window.ironFrontSetScreen === 'function') window.ironFrontSetScreen('login');
 
