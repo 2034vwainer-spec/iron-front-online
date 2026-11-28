@@ -95,7 +95,9 @@
     }
 
     if (user) {
-      setStatus('ACCOUNT VERIFIED — ACCESS GRANTED.', false);
+      setStatus(user.offline
+        ? 'OFFLINE PROFILE READY — ONLINE ACCOUNT SERVICE IS NOT CONNECTED.'
+        : 'ACCOUNT VERIFIED — ACCESS GRANTED.', false);
       if (typeof window.ironFrontSetScreen === 'function') {
         window.ironFrontSetScreen('menu');
       }
@@ -115,7 +117,7 @@
 
   function requireClient() {
     if (client) return true;
-    setStatus('ACCOUNT SERVICE IS NOT CONNECTED YET. THE GAME REMAINS LOCKED UNTIL A REAL AUTH PROVIDER IS CONFIGURED.', true);
+    setStatus('ONLINE SIGN-IN IS UNAVAILABLE. CREATE AN OFFLINE PROFILE TO PLAY ON THIS DEVICE.', false);
     return false;
   }
 
@@ -148,7 +150,7 @@
 
   async function signUp(event) {
     event.preventDefault();
-    if (busy || !requireClient()) return;
+    if (busy) return;
     const name = $('signupName').value.trim().replace(/\s+/g, ' ');
     const email = $('signupEmail').value.trim();
     const password = $('signupPassword').value;
@@ -158,6 +160,29 @@
       setStatus('PLAYER NAME MUST HAVE 3 TO 20 CHARACTERS.', true);
       return;
     }
+
+    if (!client) {
+      if (!passesMinimumAge($('birthMonth').value, $('birthYear').value)) {
+        setStatus('CHECK THE BIRTH MONTH AND YEAR.', true);
+        return;
+      }
+      setBusy(true);
+      setStatus('CREATING OFFLINE PLAYER PROFILE…', false);
+      try {
+        try { localStorage.setItem('ironfront-offline-player-v1', name); } catch (storageError) {}
+        $('authSignupForm').reset();
+        const guest = {
+          id: 'offline-' + name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16),
+          user_metadata: { player_name: name },
+          offline: true
+        };
+        setAuthenticatedUser(guest);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     if (password.length < 8) {
       setStatus('USE A PASSWORD WITH AT LEAST 8 CHARACTERS.', true);
       return;
@@ -249,7 +274,10 @@
 
   window.ironFrontSignOut = async function () {
     if (!client) {
+      try { localStorage.removeItem('ironfront-offline-player-v1'); } catch (e) {}
       setAuthenticatedUser(null);
+      switchForm('signup');
+      setStatus('OFFLINE PROFILE SIGNED OUT.', false);
       return;
     }
     const result = await client.auth.signOut();
@@ -307,7 +335,29 @@
     config.publishableKey.trim().length > 20 &&
     !/YOUR_|PLACEHOLDER/i.test(config.publishableKey);
   if (!validUrl || !validKey) {
-    setStatus('ACCOUNT SERVICE NOT CONFIGURED. ADD THE PROJECT URL AND PUBLISHABLE KEY TO auth-config.js. GAME ACCESS STAYS LOCKED UNTIL THEN.', true);
+    // Use a clearly labeled, device-local profile when no online auth provider is configured.
+    const emailLabel = document.querySelector('label[for="signupEmail"]');
+    if (emailLabel) emailLabel.classList.add('hidden');
+    $('signupEmail').classList.add('hidden');
+    $('signupEmail').required = false;
+    const passwordRow = $('signupPassword').parentElement.parentElement;
+    if (passwordRow) passwordRow.classList.add('hidden');
+    $('signupPassword').required = false;
+    $('signupConfirm').required = false;
+    $('signupSubmit').innerHTML = 'CREATE OFFLINE PLAYER PROFILE <span>→</span>';
+    $('authSubheading').textContent = 'Create a profile saved only on this device. Online accounts are not connected yet.';
+    $('guestAccessForm').classList.add('hidden');
+    const savedName = (() => { try { return localStorage.getItem('ironfront-offline-player-v1') || ''; } catch (e) { return ''; } })();
+    if (savedName) {
+      const returningPlayer = {
+        id: 'offline-' + savedName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16),
+        user_metadata: { player_name: savedName },
+        offline: true
+      };
+      setAuthenticatedUser(returningPlayer);
+    } else {
+      setStatus('CREATE AN OFFLINE PLAYER PROFILE BELOW TO ENTER THE GAME.', false);
+    }
     return;
   }
   if (!window.supabase || typeof window.supabase.createClient !== 'function') {
