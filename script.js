@@ -505,7 +505,7 @@ function activateEquippedPower(){
   else if(equippedPower==='RAPID')say('RAPID CHARGE ACTIVE — HOLD FIRE TO REPEAT');
   else say('NO POWER EQUIPPED');
 }
-function show(id){['menu','online','shop','game','bus','gameover'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='gameover'){$('gameover').classList.remove('hidden');$('gameover').scrollIntoView({block:'center',behavior:'instant'})}}
+function show(id){['login','menu','online','shop','game','bus','gameover'].forEach(x=>$(x).classList.toggle('hidden',x!==id));if(id==='gameover'){$('gameover').classList.remove('hidden');$('gameover').scrollIntoView({block:'center',behavior:'instant'})}}
 function say(s){$('message').textContent=s}
 function hud(){
   $('coins').textContent=coins;$('gameCoins').textContent=coins;$('level').textContent=level;
