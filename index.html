@@ -79,6 +79,13 @@
         <button class="primary auth-submit" type="submit">SAVE NEW PASSWORD <span>→</span></button>
       </form>
 
+      <form id="guestAccessForm" class="auth-form guest-access-form">
+        <label for="guestPlayerName">OFFLINE PLAYER NAME</label>
+        <input id="guestPlayerName" type="text" minlength="3" maxlength="20" placeholder="Choose a nickname" required>
+        <button id="guestAccessSubmit" class="secondary auth-submit" type="submit">PLAY OFFLINE (NO ACCOUNT) →</button>
+        <p class="auth-privacy-note">Offline mode saves only your nickname on this browser. It is not a real online account.</p>
+      </form>
+
       <p id="loginStatus" class="online-status auth-feedback" aria-live="polite">CHECKING ACCOUNT SERVICE…</p>
       <div class="auth-footer"><span>ACCOUNT ACCESS REQUIRED</span><span>© IRON FRONT</span></div>
     </div>
